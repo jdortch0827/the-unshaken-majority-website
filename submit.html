@@ -14,23 +14,30 @@
 <section class="section section-silver"><div class="container">
   <div class="form-card">
     <div class="notice" style="margin-bottom:24px"><strong>Do not submit:</strong> confidential employer files, illegally obtained records, private medical information, unredacted identification numbers, home addresses, threats, or material that could put someone in danger.</div>
-    <form id="case-form">
+    <noscript><div class="form-alert form-alert-error">JavaScript is required for secure direct submissions. You may contact us at <a href="mailto:theunshakenmajority@gmail.com">theunshakenmajority@gmail.com</a>.</div></noscript>
+    <form id="case-form" class="direct-form" data-form-type="case" novalidate>
+      <div class="hp-field" aria-hidden="true"><label for="case-website">Leave this field blank</label><input id="case-website" name="website" tabindex="-1" autocomplete="off"></div>
       <div class="form-grid">
-        <div class="field"><label for="name">Name or alias</label><input id="name" name="name" autocomplete="name"><p class="help">You may use an alias, but provide a working email if you want a response.</p></div>
-        <div class="field"><label for="email">Reply email</label><input id="email" name="email" type="email" autocomplete="email"></div>
-        <div class="field full"><label for="title">Short case title</label><input id="title" name="title" required placeholder="Example: Different enforcement of the same written rule"></div>
-        <div class="field"><label for="organization">Organization or issue</label><input id="organization" name="organization"></div>
+        <div class="field"><label for="name">Name or alias</label><input id="name" name="name" autocomplete="name" maxlength="160"><p class="help">You may use an alias, but provide a working email if you want a confirmation or response.</p></div>
+        <div class="field"><label for="email">Reply email</label><input id="email" name="email" type="email" autocomplete="email" maxlength="254"><p class="help">Optional. Used only for confirmation and case-related follow-up.</p></div>
+        <div class="field full"><label for="title">Short case title <span aria-hidden="true">*</span></label><input id="title" name="title" required maxlength="220" placeholder="Example: Different enforcement of the same written rule"></div>
+        <div class="field"><label for="organization">Organization or issue</label><input id="organization" name="organization" maxlength="220"></div>
         <div class="field"><label for="date">Date observed</label><input id="date" name="date" type="date"></div>
-        <div class="field full"><label for="summary">What happened?</label><textarea id="summary" name="summary" required placeholder="Describe the event, who made the decision, and the rule or standard involved."></textarea></div>
-        <div class="field full"><label for="comparison">What is the comparable case?</label><textarea id="comparison" name="comparison" required placeholder="Explain why the situations are genuinely comparable and identify any important differences."></textarea></div>
-        <div class="field full"><label for="sources">Source links</label><textarea id="sources" name="sources" placeholder="Put each source on a separate line. Attach screenshots or documents in your email after the form opens your mail app."></textarea></div>
+        <div class="field full"><label for="summary">What happened? <span aria-hidden="true">*</span></label><textarea id="summary" name="summary" required maxlength="12000" placeholder="Describe the event, who made the decision, and the rule or standard involved."></textarea></div>
+        <div class="field full"><label for="comparison">What is the comparable case? <span aria-hidden="true">*</span></label><textarea id="comparison" name="comparison" required maxlength="12000" placeholder="Explain why the situations are genuinely comparable and identify any important differences."></textarea></div>
+        <div class="field full"><label for="sources">Source links</label><textarea id="sources" name="sources" maxlength="8000" placeholder="Put each source on a separate line."></textarea></div>
+        <div class="field full"><label for="evidence-files">Evidence files</label><input class="file-input" id="evidence-files" name="evidenceFiles" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" multiple><p class="help">Up to five private files. PDF, JPG, PNG, or WEBP only; 10 MB per file and 25 MB combined.</p><div class="file-list" id="file-list" aria-live="polite"></div></div>
         <div class="field full"><label for="permission">May we contact you for clarification?</label><select id="permission" name="permission"><option value="Yes">Yes</option><option value="No">No</option></select></div>
-        <div class="field full"><button class="btn btn-primary" type="submit">Prepare Email Submission</button><p class="help">This first version opens your email app with the form filled in. Review it and attach evidence before sending.</p><p class="form-status" id="form-status" aria-live="polite"></p></div>
+        <div class="field full checkbox-field"><input id="case-consent" name="consent" type="checkbox" required><label for="case-consent">I confirm that I am authorized to submit this material, it was not illegally obtained, and I have read the <a href="privacy.html" target="_blank" rel="noopener">privacy and submission notice</a>. <span aria-hidden="true">*</span></label></div>
+        <div class="field full"><div class="turnstile-wrap"><div id="case-turnstile" class="turnstile-container" aria-label="Security check"></div></div></div>
+        <div class="field full"><button class="btn btn-primary submit-button" type="submit" disabled>Submit Case Securely</button><p class="help">Your submission stays on this website. It will not open your email application.</p><div class="upload-progress" id="case-progress" hidden><div class="upload-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div><p class="help" data-progress-text>Preparing submission…</p></div><p class="form-status" id="form-status" aria-live="polite"></p></div>
       </div>
     </form>
+    <div class="success-panel" id="case-success" hidden tabindex="-1"><span class="success-icon" aria-hidden="true">✓</span><h2>Your case was submitted</h2><p>Your reference number is:</p><p class="reference-number" data-reference></p><p>Save this number. A confirmation will be sent if you provided an email address.</p><button class="btn btn-primary" type="button" data-submit-another>Submit another case</button></div>
   </div>
 </div></section>
 </main>
-<footer class="site-footer"><div class="footer-inner"><div class="footer-brand"><img src="assets/shield.png" alt=""><div><strong>The Unshaken Majority</strong><span>Same rules. No exceptions.</span></div></div><div class="footer-links"><a href="standards.html">Standards</a><a href="investigations.html">Investigations</a><a href="submit.html">Submit</a><a href="contact.html">Contact</a></div><div class="footer-note">© <span data-current-year></span> The Unshaken Majority.</div></div></footer>
+<footer class="site-footer"><div class="footer-inner"><div class="footer-brand"><img src="assets/shield.png" alt=""><div><strong>The Unshaken Majority</strong><span>Same rules. No exceptions.</span></div></div><div class="footer-links"><a href="standards.html">Standards</a><a href="investigations.html">Investigations</a><a href="submit.html">Submit</a><a href="contact.html">Contact</a><a href="privacy.html">Privacy</a></div><div class="footer-note">© <span data-current-year></span> The Unshaken Majority.</div></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
 <script src="script.js"></script>
 </body></html>
