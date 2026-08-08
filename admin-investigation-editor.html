@@ -29,7 +29,7 @@
     </div>
     <div class="admin-alert" id="editor-status" hidden role="status" aria-live="polite"></div>
     <form id="investigation-form" class="investigation-editor-form">
-      <details class="editor-section" open><summary><span>1</span> Basic Information</summary><div class="editor-section-body admin-form-grid">
+      <details class="editor-section" id="editor-section-basic" open><summary><span>1</span> Basic Information</summary><div class="editor-section-body admin-form-grid">
         <div class="field"><label for="case-number">Case number</label><input id="case-number" readonly></div>
         <div class="field"><label for="workflow-status">Workflow</label><input id="workflow-status" readonly></div>
         <div class="field full"><label for="investigation-title">Title</label><input id="investigation-title" data-parent="title" required maxlength="300"></div>
@@ -46,21 +46,21 @@
         <div class="field full"><label for="investigation-tags">Tags <span class="optional">comma-separated</span></label><input id="investigation-tags" placeholder="personalization, consumer policy"></div>
       </div></details>
 
-      <details class="editor-section" open><summary><span>2</span> Case Summary</summary><div class="editor-section-body">
+      <details class="editor-section" id="editor-section-summary" open><summary><span>2</span> Case Summary</summary><div class="editor-section-body">
         <div class="field"><label for="short-summary">Short archive summary</label><textarea id="short-summary" data-parent="short_summary" maxlength="1200"></textarea></div>
         <div class="field"><label>Full case summary</label><div class="rich-toolbar" data-toolbar="case-summary-editor"></div><div id="case-summary-editor" class="rich-editor" contenteditable="true" data-rich="case_summary_html" role="textbox" aria-multiline="true"></div></div>
       </div></details>
 
-      <details class="editor-section"><summary><span>3</span> Claim and Standard</summary><div class="editor-section-body admin-form-grid">
+      <details class="editor-section" id="editor-section-claim-standard"><summary><span>3</span> Claim and Standard</summary><div class="editor-section-body admin-form-grid">
         <div class="field full"><label>Claim being examined</label><div class="rich-toolbar" data-toolbar="claim-editor"></div><div id="claim-editor" class="rich-editor" contenteditable="true" data-rich="claim_html" role="textbox" aria-multiline="true"></div></div>
         <div class="field full"><label>Standard being applied</label><div class="rich-toolbar" data-toolbar="standard-editor"></div><div id="standard-editor" class="rich-editor" contenteditable="true" data-rich="standard_html" role="textbox" aria-multiline="true"></div></div>
       </div></details>
 
-      <details class="editor-section"><summary><span>4</span> Methodology</summary><div class="editor-section-body"><div class="field"><label>Methodology</label><div class="rich-toolbar" data-toolbar="methodology-editor"></div><div id="methodology-editor" class="rich-editor" contenteditable="true" data-rich="methodology_html" role="textbox" aria-multiline="true"></div><p class="help">Document dates, platforms, firsthand testing, variables changed, limitations, and whether results cover an initial screen or completed transaction.</p></div></div></details>
+      <details class="editor-section" id="editor-section-methodology"><summary><span>4</span> Methodology</summary><div class="editor-section-body"><div class="field"><label>Methodology</label><div class="rich-toolbar" data-toolbar="methodology-editor"></div><div id="methodology-editor" class="rich-editor" contenteditable="true" data-rich="methodology_html" role="textbox" aria-multiline="true"></div><p class="help">Document dates, platforms, firsthand testing, variables changed, limitations, and whether results cover an initial screen or completed transaction.</p></div></div></details>
 
-      <details class="editor-section"><summary><span>5</span> Test Results</summary><div class="editor-section-body"><div id="comparison-repeater" class="repeater"></div><button class="btn btn-light" type="button" data-add-row="comparison">Add Comparison Row</button></div></details>
+      <details class="editor-section" id="editor-section-results"><summary><span>5</span> Test Results</summary><div class="editor-section-body"><div id="comparison-repeater" class="repeater"></div><button class="btn btn-light" type="button" data-add-row="comparison">Add Comparison Row</button></div></details>
 
-      <details class="editor-section"><summary><span>6</span> Evidence</summary><div class="editor-section-body">
+      <details class="editor-section" id="editor-section-evidence"><summary><span>6</span> Evidence</summary><div class="editor-section-body">
         <div class="evidence-upload-panel"><h3>Upload Evidence</h3><div class="admin-form-grid">
           <div class="field"><label for="evidence-exhibit-label">Exhibit label</label><input id="evidence-exhibit-label" placeholder="Exhibit A"></div>
           <div class="field"><label for="evidence-title">Title</label><input id="evidence-title"></div>
@@ -81,10 +81,10 @@
         <div id="evidence-admin-list" class="admin-evidence-list"></div>
       </div></details>
 
-      <details class="editor-section"><summary><span>7</span> Supported Findings</summary><div class="editor-section-body"><div id="supported-repeater" class="repeater"></div><button class="btn btn-light" type="button" data-add-row="supported">Add Supported Statement</button></div></details>
-      <details class="editor-section"><summary><span>8</span> Limitations</summary><div class="editor-section-body"><p class="notice"><strong>Required before publication:</strong> State what the evidence does not establish.</p><div id="limitations-repeater" class="repeater"></div><button class="btn btn-light" type="button" data-add-row="limitation">Add Limitation</button></div></details>
+      <details class="editor-section" id="editor-section-supported"><summary><span>7</span> Supported Findings</summary><div class="editor-section-body"><div id="supported-repeater" class="repeater"></div><button class="btn btn-light" type="button" data-add-row="supported">Add Supported Statement</button></div></details>
+      <details class="editor-section" id="editor-section-limitations"><summary><span>8</span> Limitations</summary><div class="editor-section-body"><p class="notice"><strong>Required before publication:</strong> State what the evidence does not establish.</p><div id="limitations-repeater" class="repeater"></div><button class="btn btn-light" type="button" data-add-row="limitation">Add Limitation</button></div></details>
 
-      <details class="editor-section"><summary><span>9</span> Right of Response</summary><div class="editor-section-body admin-form-grid">
+      <details class="editor-section" id="editor-section-response"><summary><span>9</span> Right of Response</summary><div class="editor-section-body admin-form-grid">
         <div class="field checkbox-field"><input id="response-contacted" type="checkbox"><label for="response-contacted">The subject was contacted.</label></div>
         <div class="field"><label for="response-status">Response status</label><select id="response-status"></select></div>
         <div class="field"><label for="response-contacted-at">Date contacted</label><input id="response-contacted-at" type="datetime-local"></div>
@@ -98,7 +98,7 @@
         <div class="field full"><h3>Questions submitted or prepared</h3><div id="response-question-repeater" class="repeater"></div><button class="btn btn-light" type="button" data-add-row="response-question">Add Response Question</button></div>
       </div></details>
 
-      <details class="editor-section"><summary><span>10</span> Finding</summary><div class="editor-section-body admin-form-grid">
+      <details class="editor-section" id="editor-section-finding"><summary><span>10</span> Finding</summary><div class="editor-section-body admin-form-grid">
         <div class="field"><label for="finding-type">Finding classification</label><select id="finding-type"></select></div>
         <div class="field"><label for="finding-stage">Stage</label><select id="finding-stage"><option>Preliminary</option><option>Final</option></select></div>
         <div class="field full" id="custom-finding-field" hidden><label for="custom-finding-label">Custom finding label</label><input id="custom-finding-label"></div>
@@ -109,14 +109,14 @@
         <div class="field full material-change-confirm" id="material-change-confirm" hidden><p class="notice"><strong>Published material change:</strong> Confirm any change to a previously published status, company response, or finding and provide a public explanation. Prior findings and update-log entries remain preserved.</p><div class="checkbox-field"><input id="confirm-material-change" type="checkbox"><label for="confirm-material-change">I confirm this material change to the published case record.</label></div><label for="finding-change-description">Public explanation of the change</label><textarea id="finding-change-description"></textarea></div>
       </div></details>
 
-      <details class="editor-section"><summary><span>11</span> Sources</summary><div class="editor-section-body"><div id="source-repeater" class="repeater"></div><button class="btn btn-light" type="button" data-add-row="source">Add Source</button></div></details>
-      <details class="editor-section"><summary><span>12</span> Corrections and Updates</summary><div class="editor-section-body"><div id="update-repeater" class="repeater"></div><button class="btn btn-light" type="button" data-add-row="update">Add Public Update</button></div></details>
-      <details class="editor-section"><summary><span>13</span> Questions Remaining and Closing Statement</summary><div class="editor-section-body"><div id="remaining-question-repeater" class="repeater"></div><button class="btn btn-light" type="button" data-add-row="remaining-question">Add Remaining Question</button><div class="field" style="margin-top:24px"><label>Bottom-line statement</label><div class="rich-toolbar" data-toolbar="bottom-line-editor"></div><div id="bottom-line-editor" class="rich-editor" contenteditable="true" data-rich="bottom_line_html" role="textbox" aria-multiline="true"></div></div></div></details>
-      <details class="editor-section"><summary><span>14</span> SEO and Sharing</summary><div class="editor-section-body admin-form-grid"><div class="field full"><label for="seo-title">Page title</label><input id="seo-title" data-parent="seo_title" maxlength="180"></div><div class="field full"><label for="seo-description">Meta description</label><textarea id="seo-description" data-parent="seo_description" maxlength="320"></textarea></div><div class="field full"><label for="social-image-path">Social image storage path <span class="optional">optional</span></label><input id="social-image-path" data-parent="social_image_path" maxlength="500"><p class="help">Leave blank to use the featured public evidence image or the default brand image.</p></div></div></details>
-      <details class="editor-section" open><summary><span>15</span> Review and Publish</summary><div class="editor-section-body"><div class="workflow-actions" id="workflow-actions"></div><div class="danger-zone"><h3>Restricted Actions</h3><div class="workflow-danger-actions" id="workflow-danger-actions"></div></div><div class="revision-panel"><h3>Revision History</h3><div id="revision-list"></div></div><div class="audit-panel"><h3>Recent Audit Events</h3><div id="audit-list"></div></div></div></details>
+      <details class="editor-section" id="editor-section-sources"><summary><span>11</span> Sources</summary><div class="editor-section-body"><div id="source-repeater" class="repeater"></div><button class="btn btn-light" type="button" data-add-row="source">Add Source</button></div></details>
+      <details class="editor-section" id="editor-section-updates"><summary><span>12</span> Corrections and Updates</summary><div class="editor-section-body"><div id="update-repeater" class="repeater"></div><button class="btn btn-light" type="button" data-add-row="update">Add Public Update</button></div></details>
+      <details class="editor-section" id="editor-section-closing"><summary><span>13</span> Questions Remaining and Closing Statement</summary><div class="editor-section-body"><div id="remaining-question-repeater" class="repeater"></div><button class="btn btn-light" type="button" data-add-row="remaining-question">Add Remaining Question</button><div class="field" style="margin-top:24px"><label>Bottom-line statement</label><div class="rich-toolbar" data-toolbar="bottom-line-editor"></div><div id="bottom-line-editor" class="rich-editor" contenteditable="true" data-rich="bottom_line_html" role="textbox" aria-multiline="true"></div></div></div></details>
+      <details class="editor-section" id="editor-section-seo"><summary><span>14</span> SEO and Sharing</summary><div class="editor-section-body admin-form-grid"><div class="field full"><label for="seo-title">Page title</label><input id="seo-title" data-parent="seo_title" maxlength="180"></div><div class="field full"><label for="seo-description">Meta description</label><textarea id="seo-description" data-parent="seo_description" maxlength="320"></textarea></div><div class="field full"><label for="social-image-path">Social image storage path <span class="optional">optional</span></label><input id="social-image-path" data-parent="social_image_path" maxlength="500"><p class="help">Leave blank to use the featured public evidence image or the default brand image.</p></div></div></details>
+      <details class="editor-section" id="editor-section-review" open><summary><span>15</span> Review and Publish</summary><div class="editor-section-body"><div class="workflow-actions" id="workflow-actions"></div><div class="danger-zone"><h3>Restricted Actions</h3><div class="workflow-danger-actions" id="workflow-danger-actions"></div></div><div class="revision-panel"><h3>Revision History</h3><div id="revision-list"></div></div><div class="audit-panel"><h3>Recent Audit Events</h3><div id="audit-list"></div></div></div></details>
     </form>
   </div>
 </main>
-<script src="/admin.js?v=20260808-internal-review-hotfix-v2"></script>
+<script src="/admin.js?v=20260808-editor-navigation-v1"></script>
 </body>
 </html>

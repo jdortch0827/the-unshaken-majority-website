@@ -44,6 +44,92 @@
     if (kind) element.classList.add(`is-${kind}`);
   }
 
+
+  function installBackToTopButton() {
+    if (document.getElementById('admin-back-to-top')) return;
+    const button = document.createElement('button');
+    button.id = 'admin-back-to-top';
+    button.type = 'button';
+    button.className = 'admin-back-to-top';
+    button.setAttribute('aria-label', 'Back to top');
+    button.innerHTML = '<span aria-hidden="true">↑</span><span>Top</span>';
+    document.body.append(button);
+    const update = () => button.classList.toggle('is-visible', window.scrollY > 450);
+    button.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+    window.addEventListener('scroll', update, {passive:true});
+    update();
+  }
+
+  function openEditorSection(sectionId) {
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+    if (section.tagName === 'DETAILS') section.open = true;
+    section.classList.remove('is-targeted');
+    void section.offsetWidth;
+    section.classList.add('is-targeted');
+    section.scrollIntoView({behavior:'smooth', block:'start'});
+    const focusTarget = section.querySelector('input, select, textarea, button, [contenteditable="true"]');
+    window.setTimeout(() => {
+      if (focusTarget) focusTarget.focus({preventScroll:true});
+    }, 550);
+    window.setTimeout(() => section.classList.remove('is-targeted'), 2400);
+  }
+
+  function workflowValidationTargets(message='') {
+    const value = String(message || '');
+    if (/public evidence exhibit or source link/i.test(value)) {
+      return [
+        {id:'editor-section-evidence', label:'Go to Evidence'},
+        {id:'editor-section-sources', label:'Go to Sources'}
+      ];
+    }
+    const rules = [
+      {id:'editor-section-basic', label:'Go to Basic Information', pattern:/title|subtitle|slug|subject|date opened|public status|category/i},
+      {id:'editor-section-summary', label:'Go to Case Summary', pattern:/case summary|short summary/i},
+      {id:'editor-section-claim-standard', label:'Go to Claim and Standard', pattern:/claim|standard being applied/i},
+      {id:'editor-section-methodology', label:'Go to Methodology', pattern:/methodology/i},
+      {id:'editor-section-results', label:'Go to Test Results', pattern:/comparison|test result/i},
+      {id:'editor-section-evidence', label:'Go to Evidence', pattern:/evidence exhibit|public evidence|evidence file|upload evidence/i},
+      {id:'editor-section-supported', label:'Go to Supported Findings', pattern:/supported finding|what the evidence supports/i},
+      {id:'editor-section-limitations', label:'Go to Limitations', pattern:/limitation|does not establish/i},
+      {id:'editor-section-response', label:'Go to Right of Response', pattern:/right of response|response status|subject was contacted|company response/i},
+      {id:'editor-section-finding', label:'Go to Finding', pattern:/finding/i},
+      {id:'editor-section-sources', label:'Go to Sources', pattern:/source link|source url|at least one source|sources?/i},
+      {id:'editor-section-updates', label:'Go to Corrections and Updates', pattern:/correction|update log|public update/i},
+      {id:'editor-section-closing', label:'Go to Closing Statement', pattern:/bottom[- ]line|closing statement|questions remaining/i},
+      {id:'editor-section-seo', label:'Go to SEO and Sharing', pattern:/seo|meta description|page title|social image/i}
+    ];
+    return rules.filter(rule => rule.pattern.test(value)).map(({id,label}) => ({id,label}));
+  }
+
+  function setWorkflowValidationStatus(message) {
+    const element = $('#editor-status');
+    const targets = workflowValidationTargets(message);
+    if (!element || !targets.length) {
+      setStatus(element, message, 'error');
+      return;
+    }
+    element.hidden = false;
+    element.className = 'admin-alert is-error admin-alert-actionable';
+    element.replaceChildren();
+    const copy = document.createElement('p');
+    copy.textContent = message;
+    element.append(copy);
+    const actions = document.createElement('div');
+    actions.className = 'admin-alert-actions';
+    const uniqueTargets = targets.filter((target, index, all) => all.findIndex(item => item.id === target.id) === index);
+    uniqueTargets.forEach(target => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'btn btn-light admin-alert-jump';
+      button.textContent = target.label;
+      button.addEventListener('click', () => openEditorSection(target.id));
+      actions.append(button);
+    });
+    element.append(actions);
+    element.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+
   async function jsonFetch(url, options={}) {
     const headers = new Headers(options.headers || {});
     if (state.session?.access_token) headers.set('Authorization', `Bearer ${state.session.access_token}`);
@@ -317,7 +403,7 @@
     if(action==='override_case_number'){caseNumber=(prompt('Enter the replacement case number in UM-YYYY-### format:',state.bundle.investigation.case_number)||'').trim();if(!caseNumber)return;}
     if(!confirm(`Confirm: ${label}?`))return;
     try {const result=await jsonFetch(`/api/admin-investigation?id=${encodeURIComponent(state.bundle.investigation.id)}`,{method:'POST',body:JSON.stringify({action,confirm:true,reason,caseNumber})});if(result.deleted){location.replace('/admin/investigations');return;}const refreshed=await jsonFetch(`/api/admin-investigation?id=${encodeURIComponent(state.bundle.investigation.id)}`);setEditorData(refreshed.bundle,refreshed.categories||state.categories,refreshed.editors||state.editors);setStatus($('#editor-status'),`${label} completed.`,'success');}
-    catch(error){setStatus($('#editor-status'),error.message,'error');}
+    catch(error){setWorkflowValidationStatus(error.message||'The workflow action could not be completed.');}
   }
 
   async function makeImagePreview(file){
@@ -356,6 +442,7 @@
   async function initPreview(){await requireAdmin();const id=new URLSearchParams(location.search).get('id')||location.pathname.match(/\/admin\/investigations\/([^/]+)\/preview/)?.[1];if(!id){$('#admin-preview-root').textContent='Missing investigation ID.';return;}$('#preview-edit-link').href=`/admin/investigations/${id}/edit`;try{const result=await jsonFetch(`/api/admin-investigation?id=${encodeURIComponent(id)}`);$('#admin-preview-root').innerHTML=renderProtectedPreview(result.bundle);}catch(error){$('#admin-preview-root').innerHTML=`<div class="admin-loading">${escapeHtml(error.message)}</div>`;}}
 
   document.addEventListener('DOMContentLoaded',async()=>{
+    installBackToTopButton();
     try{await initializeSupabase();if(page==='login')await initLogin();else if(page==='dashboard')await initDashboard();else if(page==='editor')await initEditor();else if(page==='preview')await initPreview();}
     catch(error){const target=$('#admin-login-status')||$('#admin-dashboard-status')||$('#editor-status')||$('#admin-preview-root')||document.body;setStatus(target,error.message,'error');}
   });
