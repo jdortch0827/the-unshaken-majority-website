@@ -109,7 +109,7 @@
     },
     {
       "source": "/server/:path*",
-      "destination": "/404.html"
+      "destination": "/404"
     },
     {
       "source": "/sitemap.xml",
@@ -121,27 +121,27 @@
     },
     {
       "source": "/admin",
-      "destination": "/admin-login.html"
+      "destination": "/admin-login"
     },
     {
       "source": "/admin/login",
-      "destination": "/admin-login.html"
+      "destination": "/admin-login"
     },
     {
       "source": "/admin/investigations/new",
-      "destination": "/admin-investigation-editor.html?mode=new"
+      "destination": "/admin-investigation-editor?mode=new"
     },
     {
       "source": "/admin/investigations/:id/edit",
-      "destination": "/admin-investigation-editor.html?id=:id"
+      "destination": "/admin-investigation-editor?id=:id"
     },
     {
       "source": "/admin/investigations/:id/preview",
-      "destination": "/admin-preview.html?id=:id"
+      "destination": "/admin-preview?id=:id"
     },
     {
       "source": "/admin/investigations",
-      "destination": "/admin-investigations.html"
+      "destination": "/admin-investigations"
     }
   ]
 }
