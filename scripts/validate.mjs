@@ -58,5 +58,41 @@ for(const token of ['UM-2026-001','coca-cola-custom-can-filter','investigation_a
   if(!migration.includes(token)) errors.push(`Migration missing expected token: ${token}`);
 }
 
+
+// Repository-structure safeguards: Vercel functions must stay in /api,
+// shared backend code must stay in /server, and browser scripts must not be
+// overwritten by serverless handlers.
+const forbiddenRootFiles = [
+  '002_investigations.sql','003_bootstrap_admin.sql.example','env.example',
+  'admin-corrections.js','admin-evidence.js','admin-investigation.js','admin-investigations.js','admin-session.js',
+  'finalize-case.js','finalize-correction.js','form-config.js','health.js','investigation-page.js','investigation.js',
+  'prepare-case.js','prepare-correction.js','sitemap.js','submit-contact.js','shared.js',
+  'banner-dark-mobile.png','banner-dark-tablet.png','banner-dark.png','favicon.png','seal.png','shield.png','social-preview.jpg'
+];
+for (const file of forbiddenRootFiles) {
+  if (fs.existsSync(path.join(root, file))) errors.push(`Misplaced duplicate file in repository root: ${file}`);
+}
+for (const file of ['server/investigations.js','scripts/validate.mjs','scripts/test-investigations.mjs','setup/003_bootstrap_admin.sql.example','assets/banner-dark-mobile.png','assets/banner-dark-tablet.png']) {
+  if (!fs.existsSync(path.join(root, file))) errors.push(`Missing required structured file: ${file}`);
+}
+for (const file of ['api/package.json','api/vercel.json','api/shared.js','api/investigation.html']) {
+  if (fs.existsSync(path.join(root, file))) errors.push(`Invalid file inside API directory: ${file}`);
+}
+const apiFiles = fs.existsSync(path.join(root,'api')) ? fs.readdirSync(path.join(root,'api')).filter((name)=>name.endsWith('.js')) : [];
+const apiBaseNames = new Map();
+for (const name of apiFiles) {
+  if (/ \(\d+\)\.js$/.test(name)) errors.push(`Duplicate-upload filename in API directory: api/${name}`);
+  const base = path.parse(name).name.toLowerCase();
+  if (apiBaseNames.has(base)) errors.push(`Conflicting API function names: api/${apiBaseNames.get(base)} and api/${name}`);
+  apiBaseNames.set(base, name);
+}
+for (const name of fs.readdirSync(root)) {
+  if (/ \(\d+\)\./.test(name)) errors.push(`Duplicate-upload filename in repository root: ${name}`);
+}
+const publicArchiveScript = fs.readFileSync(path.join(root,'investigations.js'),'utf8');
+if (/export\s+default\s+async\s+function\s+handler/.test(publicArchiveScript) || /\.\.\/server\//.test(publicArchiveScript)) errors.push('Public investigations.js was overwritten by an API function.');
+const latestPublicScript = fs.readFileSync(path.join(root,'latest-investigation.js'),'utf8');
+if (/export\s+default\s+async\s+function\s+handler/.test(latestPublicScript) || /\.\.\/server\//.test(latestPublicScript)) errors.push('Public latest-investigation.js was overwritten by an API function.');
+
 if(errors.length){console.error(`Validation failed with ${errors.length} issue(s):\n- ${errors.join('\n- ')}`);process.exit(1);}
 console.log(`Validation passed: ${htmlFiles.length} HTML pages, ${expected.length} required files, routes, references, and secret checks.`);
