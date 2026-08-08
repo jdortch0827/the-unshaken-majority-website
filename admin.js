@@ -397,6 +397,25 @@
     if(workflow==='draft'&&!inv.published_at&&role==='admin')add(danger,'Delete Unpublished Draft','delete','danger',true);
   }
   async function workflowAction(action,label,needsReason){
+    // UM-PUBLIC-STAGE-AUTO-NORMALIZATION-V2
+    // Internal/editorial labels must never become public case stages.
+    // Preserve deliberate final/corrected outcomes, but normalize
+    // draft-style stages before the Publish workflow request.
+    if(action==='publish'){
+      const statusControl=$('#investigation-status');
+      const internalOnlyPublicLabels=new Set([
+        '',
+        'Open Investigation',
+        'Awaiting Response',
+        'Under Review'
+      ]);
+      if(statusControl&&internalOnlyPublicLabels.has(statusControl.value)){
+        statusControl.value='Preliminary Finding';
+        statusControl.dispatchEvent(new Event('input',{bubbles:true}));
+        statusControl.dispatchEvent(new Event('change',{bubbles:true}));
+        markDirty();
+      }
+    }
     if(state.dirty)await saveEditor(false);
     let reason='';if(needsReason){reason=prompt(`${label} requires a written reason that may become part of the case record:`)||'';if(!reason.trim())return;}
     let caseNumber='';
