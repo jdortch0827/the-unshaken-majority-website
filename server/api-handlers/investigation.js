@@ -1,5 +1,5 @@
-import { getSupabaseAdmin, sendJson } from '../server/shared.js';
-import { fetchInvestigationBundle, PUBLIC_WORKFLOWS, toPublicBundle } from '../server/investigations.js';
+import { getSupabaseAdmin, sendJson } from '../shared.js';
+import { fetchInvestigationBundle, PUBLIC_WORKFLOWS, toPublicBundle } from '../investigations.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {

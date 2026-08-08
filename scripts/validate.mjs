@@ -6,7 +6,9 @@ const errors = [];
 const expected = [
   'index.html','investigations.html','investigation.html','standards.html','submit.html','contact.html','correction.html','privacy.html','404.html',
   'admin-login.html','admin-investigations.html','admin-investigation-editor.html','admin-preview.html','admin.js','admin.css',
-  'api/investigations.js','api/investigation.js','api/investigation-page.js','api/latest-investigation.js','api/admin-session.js','api/admin-investigations.js','api/admin-investigation.js','api/admin-evidence.js','api/admin-corrections.js','api/prepare-correction.js','api/finalize-correction.js',
+  'api/investigation-data.js','api/investigation-page.js','api/admin.js','api/prepare-correction.js','api/finalize-correction.js',
+  'server/api-handlers/investigations.js','server/api-handlers/investigation.js','server/api-handlers/latest-investigation.js','server/api-handlers/sitemap.js',
+  'server/api-handlers/admin-session.js','server/api-handlers/admin-investigations.js','server/api-handlers/admin-investigation.js','server/api-handlers/admin-evidence.js','server/api-handlers/admin-corrections.js',
   'setup/002_investigations.sql','assets/shield.png','assets/seal.png','assets/banner-dark.png','assets/social-preview.jpg','vercel.json'
 ];
 for (const file of expected) if (!fs.existsSync(path.join(root,file))) errors.push(`Missing required file: ${file}`);
@@ -42,7 +44,7 @@ for(const image of ['shield.png','seal.png','banner-dark.png','social-preview.jp
 
 const vercel = JSON.parse(fs.readFileSync(path.join(root,'vercel.json'),'utf8'));
 const rewriteSources = new Set((vercel.rewrites||[]).map(item=>item.source));
-for(const route of ['/investigations/:slug','/admin/login','/admin/investigations','/admin/investigations/new','/admin/investigations/:id/edit','/admin/investigations/:id/preview','/sitemap.xml']){
+for(const route of ['/api/investigations','/api/investigation','/api/latest-investigation','/api/sitemap','/api/admin-session','/api/admin-investigations','/api/admin-investigation','/api/admin-evidence','/api/admin-corrections','/investigations/:slug','/admin/login','/admin/investigations','/admin/investigations/new','/admin/investigations/:id/edit','/admin/investigations/:id/preview','/sitemap.xml']){
   if(!rewriteSources.has(route)) errors.push(`Missing Vercel rewrite: ${route}`);
 }
 const detailRewrite = (vercel.rewrites || []).find((item) => item.source === '/investigations/:slug');
@@ -80,6 +82,7 @@ for (const file of ['api/package.json','api/vercel.json','api/shared.js','api/in
 }
 const apiFiles = fs.existsSync(path.join(root,'api')) ? fs.readdirSync(path.join(root,'api')).filter((name)=>name.endsWith('.js')) : [];
 const apiBaseNames = new Map();
+if (apiFiles.length > 12) errors.push(`Hobby-plan function limit exceeded: ${apiFiles.length} files in /api; maximum is 12.`);
 for (const name of apiFiles) {
   if (/ \(\d+\)\.js$/.test(name)) errors.push(`Duplicate-upload filename in API directory: api/${name}`);
   const base = path.parse(name).name.toLowerCase();

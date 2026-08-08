@@ -1,8 +1,8 @@
-import { ValidationError, cleanText, sendJson } from '../server/shared.js';
+import { ValidationError, cleanText, sendJson } from '../shared.js';
 import {
   EDIT_ROLES, audit, fetchInvestigationBundle, getAuthenticatedAdmin,
   investigationError, slugify, uniqueSlug
-} from '../server/investigations.js';
+} from '../investigations.js';
 
 async function createInvestigation(supabase, user, payload) {
   const title = cleanText(payload.title, 300, { required: true, label: 'Title' });

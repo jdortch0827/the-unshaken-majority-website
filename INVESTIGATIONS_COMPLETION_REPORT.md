@@ -268,3 +268,7 @@ An uploaded original cannot be silently overwritten. A replacement requires an a
 The public URL will be:
 
 `https://www.theunshakenmajority.com/investigations/coca-cola-custom-can-filter`
+
+## Vercel Hobby function consolidation
+
+The deployment uses 10 Vercel Functions. Investigation data endpoints share `api/investigation-data.js`, and administrator endpoints share `api/admin.js`. Their individual handlers remain separated under `server/api-handlers/` for maintainability and server-side access control. Compatibility rewrites preserve every existing `/api/...` URL.

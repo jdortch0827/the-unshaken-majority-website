@@ -1,5 +1,5 @@
-import { getSupabaseAdmin } from '../server/shared.js';
-import { PUBLIC_WORKFLOWS } from '../server/investigations.js';
+import { getSupabaseAdmin } from '../shared.js';
+import { PUBLIC_WORKFLOWS } from '../investigations.js';
 
 function xmlEscape(value) {
   return String(value || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&apos;');

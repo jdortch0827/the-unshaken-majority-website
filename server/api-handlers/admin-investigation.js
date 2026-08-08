@@ -1,11 +1,11 @@
-import { ValidationError, cleanBoolean, cleanText, sendJson } from '../server/shared.js';
+import { ValidationError, cleanBoolean, cleanText, sendJson } from '../shared.js';
 import {
   ADMIN_ROLES, APPROVE_ROLES, EDIT_ROLES, EVIDENCE_TYPES, EVIDENCE_VISIBILITIES,
   FINDING_TYPES, PUBLIC_STATUSES, RESPONSE_STATUSES, SOURCE_TYPES, UPDATE_TYPES,
   WORKFLOW_STATUSES, audit, createRevision, currentFinding, fetchInvestigationBundle,
   findingChanged, getAuthenticatedAdmin, investigationError, sanitizeRichText,
   cleanOptionalDate, cleanOptionalDateTime, cleanUrl, uniqueSlug, validatePublishable
-} from '../server/investigations.js';
+} from '../investigations.js';
 
 function ensureChoice(value, allowed, label, { nullable = false } = {}) {
   const text = cleanText(value, 120, { required: !nullable, label });

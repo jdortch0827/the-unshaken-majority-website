@@ -21,3 +21,7 @@ After deployment and administrator bootstrap, open:
 `https://www.theunshakenmajority.com/admin/login`
 
 Detailed installation, evidence-upload, review, and publishing instructions are in `SETUP.md`.
+
+## Vercel Hobby deployment architecture
+
+The public and administrator investigation endpoints are routed through two dispatcher functions so the project stays below Vercel Hobby's 12-function-per-deployment limit. Existing public API addresses remain unchanged through `vercel.json` rewrites.

@@ -1,10 +1,10 @@
 import crypto from 'node:crypto';
-import { ValidationError, cleanBoolean, cleanText, sendJson } from '../server/shared.js';
+import { ValidationError, cleanBoolean, cleanText, sendJson } from '../shared.js';
 import {
   EDIT_ROLES, EVIDENCE_TYPES, EVIDENCE_VISIBILITIES, INVESTIGATION_BUCKET,
   audit, getAuthenticatedAdmin, investigationError, makeEvidencePaths,
   validateAdminFile, cleanOptionalDateTime, cleanUrl
-} from '../server/investigations.js';
+} from '../investigations.js';
 
 function ensureChoice(value, allowed, label) {
   const text = cleanText(value, 120, { required: true, label });

@@ -1,5 +1,5 @@
-import { getSupabaseAdmin, sendJson } from '../server/shared.js';
-import { PUBLIC_WORKFLOWS } from '../server/investigations.js';
+import { getSupabaseAdmin, sendJson } from '../shared.js';
+import { PUBLIC_WORKFLOWS } from '../investigations.js';
 
 function normalize(value) {
   return String(value || '').trim().toLowerCase();

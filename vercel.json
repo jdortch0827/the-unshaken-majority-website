@@ -55,9 +55,58 @@
           "value": "noindex, nofollow, noarchive"
         }
       ]
+    },
+    {
+      "source": "/api/admin",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        }
+      ]
     }
   ],
   "rewrites": [
+    {
+      "source": "/api/admin-session",
+      "destination": "/api/admin?route=session"
+    },
+    {
+      "source": "/api/admin-investigations",
+      "destination": "/api/admin?route=investigations"
+    },
+    {
+      "source": "/api/admin-investigation",
+      "destination": "/api/admin?route=investigation"
+    },
+    {
+      "source": "/api/admin-evidence",
+      "destination": "/api/admin?route=evidence"
+    },
+    {
+      "source": "/api/admin-corrections",
+      "destination": "/api/admin?route=corrections"
+    },
+    {
+      "source": "/api/investigations",
+      "destination": "/api/investigation-data?route=list"
+    },
+    {
+      "source": "/api/investigation",
+      "destination": "/api/investigation-data?route=detail"
+    },
+    {
+      "source": "/api/latest-investigation",
+      "destination": "/api/investigation-data?route=latest"
+    },
+    {
+      "source": "/api/sitemap",
+      "destination": "/api/investigation-data?route=sitemap"
+    },
     {
       "source": "/server/:path*",
       "destination": "/404.html"

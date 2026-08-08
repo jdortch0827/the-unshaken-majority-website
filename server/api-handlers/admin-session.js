@@ -1,5 +1,5 @@
-import { sendJson } from '../server/shared.js';
-import { getAuthenticatedAdmin, investigationError } from '../server/investigations.js';
+import { sendJson } from '../shared.js';
+import { getAuthenticatedAdmin, investigationError } from '../investigations.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {

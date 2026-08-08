@@ -1,5 +1,5 @@
-import { ValidationError, cleanText, sendJson } from '../server/shared.js';
-import { APPROVE_ROLES, INVESTIGATION_BUCKET, audit, getAuthenticatedAdmin, investigationError } from '../server/investigations.js';
+import { ValidationError, cleanText, sendJson } from '../shared.js';
+import { APPROVE_ROLES, INVESTIGATION_BUCKET, audit, getAuthenticatedAdmin, investigationError } from '../investigations.js';
 
 export default async function handler(req, res) {
   try {
