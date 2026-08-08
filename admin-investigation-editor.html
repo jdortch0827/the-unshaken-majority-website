@@ -8,9 +8,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.0" defer></script>
 </head>
 <body class="admin-body" data-admin-page="editor">
-<header class="admin-header"><a class="admin-brand" href="/admin/investigations"><img src="/assets/shield.png" alt=""><span>Investigation Workspace</span></a><div class="admin-user"><span data-admin-user>Loadingâ€¦</span><button class="admin-link-button" type="button" data-admin-logout>Sign Out</button></div></header>
+<header class="admin-header"><a class="admin-brand" href="/admin/investigations"><img src="/assets/shield.png" alt=""><span>Investigation Workspace</span></a><div class="admin-user"><span data-admin-user>Loading...</span><button class="admin-link-button" type="button" data-admin-logout>Sign Out</button></div></header>
 <main class="admin-main admin-editor-main" id="main">
-  <div id="admin-editor-loading" class="admin-loading">Loading investigation editorâ€¦</div>
+  <div id="admin-editor-loading" class="admin-loading">Loading investigation editor...</div>
   <section id="new-investigation-panel" class="admin-panel admin-create-panel" hidden>
     <span class="admin-kicker">Create Case File</span><h1>New Investigation</h1><p>A unique case number is assigned immediately and will never be reused.</p>
     <form id="new-investigation-form" class="admin-form-grid">
@@ -76,7 +76,7 @@
           <div class="field full"><label for="evidence-file">Original evidence file</label><div id="evidence-drop-zone" class="drop-zone"><input id="evidence-file" type="file" accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,.mp3,.wav,.m4a,.pdf,.doc,.docx,.txt,.csv"><p>Drag and drop a file here or choose a file. Maximum 50 MB.</p></div></div>
           <div class="field checkbox-field"><input id="evidence-download" type="checkbox"><label for="evidence-download">Allow a public download link when this exhibit is public.</label></div>
           <div class="field checkbox-field"><input id="evidence-featured" type="checkbox"><label for="evidence-featured">Use as the featured case image when appropriate.</label></div>
-          <div class="field full"><button class="btn btn-primary" id="upload-evidence" type="button">Upload Evidence</button><div class="upload-progress" id="admin-evidence-progress" hidden><div class="upload-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div><p class="help" data-progress-text>Preparing uploadâ€¦</p></div></div>
+          <div class="field full"><button class="btn btn-primary" id="upload-evidence" type="button">Upload Evidence</button><div class="upload-progress" id="admin-evidence-progress" hidden><div class="upload-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div><p class="help" data-progress-text>Preparing upload...</p></div></div>
         </div></div>
         <div id="evidence-admin-list" class="admin-evidence-list"></div>
       </div></details>
@@ -117,6 +117,6 @@
     </form>
   </div>
 </main>
-<script src="/admin.js?v=20260808-editor-navigation-v1"></script>
+<script src="/admin.js?v=20260808-editor-usability-v2"></script>
 </body>
 </html>
