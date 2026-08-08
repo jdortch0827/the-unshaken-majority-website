@@ -4,11 +4,11 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Submit a Case | The Unshaken Majority</title>
   <meta name="description" content="Submit evidence of a possible double standard for review by The Unshaken Majority.">
-  <link rel="icon" href="assets/favicon.png"><link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="/assets/favicon.png"><link rel="stylesheet" href="/styles.css">
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
-<header class="site-header"><nav class="nav-wrap" aria-label="Main navigation"><a class="brand" href="index.html"><img src="assets/shield.png" alt=""><span>The Unshaken Majority</span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav">Menu</button><div class="nav-links" id="main-nav"><a href="index.html">Home</a><a href="investigations.html">Investigations</a><a href="standards.html">Our Standards</a><a href="contact.html">Contact</a><a class="nav-cta" aria-current="page" href="submit.html">Submit a Case</a></div></nav></header>
+<header class="site-header"><nav class="nav-wrap" aria-label="Main navigation"><a class="brand" href="/"><img src="/assets/shield.png" alt=""><span>The Unshaken Majority</span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav">Menu</button><div class="nav-links" id="main-nav"><a href="/">Home</a><a href="/investigations">Investigations</a><a href="/standards">Our Standards</a><a href="/contact">Contact</a><a class="nav-cta" aria-current="page" href="/submit">Submit a Case</a></div></nav></header>
 <main id="main">
 <section class="page-hero"><div class="container"><span class="eyebrow">Send evidence</span><h1>Submit a Case</h1><p>The strongest submissions include the original source, a genuinely comparable case, dates, context, and a clear explanation of the suspected inconsistency.</p></div></section>
 <section class="section section-silver"><div class="container">
@@ -21,6 +21,7 @@
         <div class="field"><label for="name">Name or alias</label><input id="name" name="name" autocomplete="name" maxlength="160"><p class="help">You may use an alias, but provide a working email if you want a confirmation or response.</p></div>
         <div class="field"><label for="email">Reply email</label><input id="email" name="email" type="email" autocomplete="email" maxlength="254"><p class="help">Optional. Used only for confirmation and case-related follow-up.</p></div>
         <div class="field full"><label for="title">Short case title <span aria-hidden="true">*</span></label><input id="title" name="title" required maxlength="220" placeholder="Example: Different enforcement of the same written rule"></div>
+        <div class="field full"><label for="related-case-number">Related investigation case number <span class="optional">optional</span></label><input id="related-case-number" name="relatedCaseNumber" maxlength="40" placeholder="Example: UM-2026-001"><p class="help">This is filled automatically when you choose “Submit Additional Evidence” from a published investigation.</p></div>
         <div class="field"><label for="organization">Organization or issue</label><input id="organization" name="organization" maxlength="220"></div>
         <div class="field"><label for="date">Date observed</label><input id="date" name="date" type="date"></div>
         <div class="field full"><label for="summary">What happened? <span aria-hidden="true">*</span></label><textarea id="summary" name="summary" required maxlength="12000" placeholder="Describe the event, who made the decision, and the rule or standard involved."></textarea></div>
@@ -28,7 +29,7 @@
         <div class="field full"><label for="sources">Source links</label><textarea id="sources" name="sources" maxlength="8000" placeholder="Put each source on a separate line."></textarea></div>
         <div class="field full"><label for="evidence-files">Evidence files</label><input class="file-input" id="evidence-files" name="evidenceFiles" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" multiple><p class="help">Up to five private files. PDF, JPG, PNG, or WEBP only; 10 MB per file and 25 MB combined.</p><div class="file-list" id="file-list" aria-live="polite"></div></div>
         <div class="field full"><label for="permission">May we contact you for clarification?</label><select id="permission" name="permission"><option value="Yes">Yes</option><option value="No">No</option></select></div>
-        <div class="field full checkbox-field"><input id="case-consent" name="consent" type="checkbox" required><label for="case-consent">I confirm that I am authorized to submit this material, it was not illegally obtained, and I have read the <a href="privacy.html" target="_blank" rel="noopener">privacy and submission notice</a>. <span aria-hidden="true">*</span></label></div>
+        <div class="field full checkbox-field"><input id="case-consent" name="consent" type="checkbox" required><label for="case-consent">I confirm that I am authorized to submit this material, it was not illegally obtained, and I have read the <a href="/privacy" target="_blank" rel="noopener">privacy and submission notice</a>. <span aria-hidden="true">*</span></label></div>
         <div class="field full"><div class="turnstile-wrap"><div id="case-turnstile" class="turnstile-container" aria-label="Security check"></div></div></div>
         <div class="field full"><button class="btn btn-primary submit-button" type="submit" disabled>Submit Case Securely</button><p class="help">Your submission stays on this website. It will not open your email application.</p><div class="upload-progress" id="case-progress" hidden><div class="upload-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div><p class="help" data-progress-text>Preparing submission…</p></div><p class="form-status" id="form-status" aria-live="polite"></p></div>
       </div>
@@ -37,7 +38,7 @@
   </div>
 </div></section>
 </main>
-<footer class="site-footer"><div class="footer-inner"><div class="footer-brand"><img src="assets/shield.png" alt=""><div><strong>The Unshaken Majority</strong><span>Same rules. No exceptions.</span></div></div><div class="footer-links"><a href="standards.html">Standards</a><a href="investigations.html">Investigations</a><a href="submit.html">Submit</a><a href="contact.html">Contact</a><a href="privacy.html">Privacy</a></div><div class="footer-note">© <span data-current-year></span> The Unshaken Majority.</div></div></footer>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
-<script src="script.js"></script>
+<footer class="site-footer"><div class="footer-inner"><div class="footer-brand"><img src="/assets/shield.png" alt=""><div><strong>The Unshaken Majority</strong><span>Same rules. No exceptions.</span></div></div><div class="footer-links"><a href="/standards">Standards</a><a href="/investigations">Investigations</a><a href="/submit">Submit</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a></div><div class="footer-note">© <span data-current-year></span> The Unshaken Majority.</div></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.0" crossorigin="anonymous"></script>
+<script src="/script.js"></script>
 </body></html>

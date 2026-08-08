@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Report an Error | The Unshaken Majority</title>
+  <meta name="description" content="Submit a correction request tied to a published investigation.">
+  <meta name="robots" content="noindex,follow">
+  <link rel="icon" href="/assets/favicon.png"><link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.0" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header"><nav class="nav-wrap" aria-label="Main navigation"><a class="brand" href="/"><img src="/assets/shield.png" alt=""><span>The Unshaken Majority</span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav">Menu</button><div class="nav-links" id="main-nav"><a href="/">Home</a><a href="/investigations">Investigations</a><a href="/standards">Our Standards</a><a href="/contact">Contact</a><a class="nav-cta" href="/submit">Submit a Case</a></div></nav></header>
+<main id="main">
+<section class="page-hero"><div class="container"><span class="eyebrow">Corrections process</span><h1>Report an Error</h1><p>Challenge a specific factual statement or finding. Submission creates a private review item; it does not automatically change the public investigation.</p></div></section>
+<section class="section"><div class="container"><div class="form-card">
+  <form id="correction-form" class="form-grid" novalidate>
+    <div class="hp-field" aria-hidden="true"><label for="correction-website">Leave blank</label><input id="correction-website" name="website" tabindex="-1" autocomplete="off"></div>
+    <div class="field full"><label for="correction-case">Investigation case number</label><input id="correction-case" name="caseNumber" required readonly></div>
+    <div class="field"><label for="correction-name">Name</label><input id="correction-name" name="name" required autocomplete="name"></div>
+    <div class="field"><label for="correction-email">Email</label><input id="correction-email" name="email" type="email" required autocomplete="email"></div>
+    <div class="field full"><label for="correction-organization">Organization <span class="optional">optional</span></label><input id="correction-organization" name="organization" autocomplete="organization"></div>
+    <div class="field full"><label for="challenged-statement">Specific statement being challenged</label><textarea id="challenged-statement" name="challengedStatement" required></textarea></div>
+    <div class="field full"><label for="correction-explanation">Explanation</label><textarea id="correction-explanation" name="explanation" required></textarea></div>
+    <div class="field full"><label for="correction-source">Supporting source URL <span class="optional">optional</span></label><input id="correction-source" name="sourceUrl" type="url" placeholder="https://"></div>
+    <div class="field full"><label for="correction-file">Supporting file <span class="optional">optional, 10 MB maximum</span></label><input class="file-input" id="correction-file" name="file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.txt,.csv"><div id="correction-file-list" class="file-list"></div></div>
+    <div class="field full"><label for="requested-correction">Requested correction</label><textarea id="requested-correction" name="requestedCorrection" required></textarea></div>
+    <div class="field full checkbox-field"><input id="correction-permission" name="permission" type="checkbox"><label for="correction-permission">You may contact me about this correction request.</label></div>
+    <div class="field full checkbox-field"><input id="correction-certification" name="certification" type="checkbox" required><label for="correction-certification">I certify that this submission is truthful to the best of my knowledge.</label></div>
+    <div class="field full turnstile-wrap"><div id="correction-turnstile" class="turnstile-container" aria-label="Security check"></div></div>
+    <div class="field full"><button class="btn btn-primary submit-button" type="submit" disabled>Submit Correction Request</button><p id="correction-status" class="form-status" role="status" aria-live="polite"></p></div>
+  </form>
+  <div id="correction-success" class="success-panel" hidden tabindex="-1"><span class="success-icon">✓</span><h2>Correction request received</h2><p>Your reference number is:</p><p class="reference-number" data-reference></p><p>The request will be reviewed by an authorized editor. Public content will not change automatically.</p><a class="btn btn-primary" href="/investigations">Return to Investigations</a></div>
+</div></div></section>
+</main>
+<footer class="site-footer"><div class="footer-inner"><div class="footer-brand"><img src="/assets/shield.png" alt=""><div><strong>The Unshaken Majority</strong><span>Same rules. No exceptions.</span></div></div><div class="footer-links"><a href="/standards">Standards</a><a href="/investigations">Investigations</a><a href="/submit">Submit</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a></div><div class="footer-note">© <span data-current-year></span> The Unshaken Majority.</div></div></footer>
+<script src="/script.js"></script><script src="/correction.js"></script>
+</body>
+</html>

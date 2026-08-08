@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Investigation Admin Sign In | The Unshaken Majority</title>
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <link rel="icon" href="/assets/favicon.png"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.0" defer></script>
+</head>
+<body class="admin-body" data-admin-page="login">
+<main class="admin-login-shell">
+  <section class="admin-login-card" aria-labelledby="login-title">
+    <img src="/assets/shield.png" alt="The Unshaken Majority shield">
+    <span class="admin-kicker">Protected Workspace</span>
+    <h1 id="login-title">Investigation Administration</h1>
+    <p>Authorized editors and reviewers only.</p>
+    <form id="admin-login-form" class="admin-form-grid">
+      <div class="field full"><label for="admin-email">Email</label><input id="admin-email" name="email" type="email" autocomplete="username" required></div>
+      <div class="field full"><label for="admin-password">Password</label><input id="admin-password" name="password" type="password" autocomplete="current-password" required></div>
+      <div class="field full"><button class="btn btn-primary" type="submit">Sign In</button><p class="form-status" id="admin-login-status" role="status" aria-live="polite"></p></div>
+    </form>
+    <a class="admin-back-link" href="/">← Return to public website</a>
+  </section>
+</main>
+<script src="/admin.js"></script>
+</body>
+</html>

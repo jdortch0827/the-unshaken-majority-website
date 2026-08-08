@@ -1,0 +1,16 @@
+-- First create the user in Supabase Dashboard:
+-- Authentication -> Users -> Add user
+-- Then copy that user's UUID and replace REPLACE_WITH_AUTH_USER_UUID below.
+
+insert into public.admin_profiles (user_id, display_name, role, active)
+values (
+  'REPLACE_WITH_AUTH_USER_UUID'::uuid,
+  'James Dortch',
+  'admin',
+  true
+)
+on conflict (user_id) do update set
+  display_name = excluded.display_name,
+  role = excluded.role,
+  active = excluded.active,
+  updated_at = now();

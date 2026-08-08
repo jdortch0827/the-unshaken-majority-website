@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Investigation Dashboard | The Unshaken Majority</title>
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <link rel="icon" href="/assets/favicon.png"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.0" defer></script>
+</head>
+<body class="admin-body" data-admin-page="dashboard">
+<header class="admin-header"><a class="admin-brand" href="/admin/investigations"><img src="/assets/shield.png" alt=""><span>Investigation Workspace</span></a><div class="admin-user"><span data-admin-user>Loading…</span><button class="admin-link-button" type="button" data-admin-logout>Sign Out</button></div></header>
+<main class="admin-main" id="main">
+  <div class="admin-page-heading"><div><span class="admin-kicker">Case Management</span><h1>Investigations</h1><p>Create, review, publish, correct, archive, and withdraw formal case files.</p></div><a class="btn btn-primary" href="/admin/investigations/new">New Investigation</a></div>
+  <div class="admin-alert" id="admin-dashboard-status" hidden role="status"></div>
+  <section class="admin-panel">
+    <form class="admin-filter-grid" id="admin-investigation-filters">
+      <div class="field"><label for="admin-search">Search</label><input id="admin-search" type="search" placeholder="Case number, title, or subject"></div>
+      <div class="field"><label for="workflow-filter">Workflow</label><select id="workflow-filter"><option value="">All workflows</option><option value="draft">Draft</option><option value="internal_review">In Review</option><option value="approved">Approved</option><option value="published">Published</option><option value="archived">Archived</option><option value="withdrawn">Withdrawn</option></select></div>
+      <div class="field"><label for="status-filter">Public status</label><select id="status-filter"><option value="">All statuses</option></select></div>
+      <div class="field"><label for="finding-filter">Finding</label><select id="finding-filter"><option value="">All findings</option></select></div>
+      <div class="field"><label for="response-filter">Response</label><select id="response-filter"><option value="">All response statuses</option></select></div>
+      <div class="field"><label for="editor-filter">Assigned editor</label><select id="editor-filter"><option value="">All editors</option></select></div>
+      <div class="admin-filter-actions"><button class="btn btn-dark" type="submit">Apply</button><button class="btn btn-light" type="button" id="admin-clear-filters">Clear</button></div>
+    </form>
+    <div class="admin-table-wrap">
+      <table class="admin-table" id="admin-investigation-table">
+        <thead><tr><th>Case</th><th>Title / Subject</th><th>Workflow</th><th>Status / Finding</th><th>Editor</th><th>Updated</th><th>Evidence</th><th>Actions</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="admin-empty" id="admin-investigation-empty" hidden>No investigations match the current filters.</div>
+  </section>
+
+  <section class="admin-panel" id="correction-review-panel">
+    <div class="admin-panel-heading"><div><span class="admin-kicker">Review Queue</span><h2>Correction Requests</h2></div><span class="count-badge" id="correction-count">0</span></div>
+    <div id="correction-list" class="correction-review-list"></div>
+    <div class="admin-empty" id="correction-empty" hidden>No correction requests have been submitted.</div>
+  </section>
+</main>
+<script src="/admin.js"></script>
+</body>
+</html>

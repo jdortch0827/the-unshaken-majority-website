@@ -1,18 +1,23 @@
 # The Unshaken Majority Website
 
-Official static website with secure direct contact and case-submission forms.
+Official public website and protected investigation-publishing workspace for The Unshaken Majority.
 
-## Included
+## Included systems
 
-- Approved UTM shield, circular seal, and campaign banner
-- Home, Investigations, Our Standards, Submit a Case, Contact, Privacy, and 404 pages
-- Vercel server functions under `api/`
-- Private Supabase case records and evidence uploads
-- Cloudflare Turnstile bot verification
-- Resend administrator notifications and submitter confirmations
-- Reference numbers, file restrictions, consent language, and success/error states
-- Mobile-first responsive layout
+- Public homepage, standards, contact, privacy, and secure case-submission forms
+- Published investigations archive with search, filters, and pagination
+- Structured public investigation pages with evidence, findings, sources, right of response, and permanent updates
+- Public correction-request workflow tied to each case
+- Supabase-backed protected investigation administration workspace
+- Draft → Internal Review → Approved → Published workflow
+- Private evidence storage with expiring signed access
+- Case numbering, revisions, audit logs, archive, withdrawal, and correction controls
+- Unpublished Coca-Cola investigation draft `UM-2026-001`
 
-## Deployment
+## Administration
 
-Read `SETUP.md` before replacing the live website. The forms require Vercel environment variables and the one-time Supabase SQL setup.
+After deployment and administrator bootstrap, open:
+
+`https://www.theunshakenmajority.com/admin/login`
+
+Detailed installation, evidence-upload, review, and publishing instructions are in `SETUP.md`.

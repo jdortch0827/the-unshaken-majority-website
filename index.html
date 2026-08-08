@@ -11,21 +11,21 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://theunshakenmajority.com/">
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="/assets/favicon.png">
+  <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="site-header">
   <nav class="nav-wrap" aria-label="Main navigation">
-    <a class="brand" href="index.html"><img src="assets/shield.png" alt=""><span>The Unshaken Majority</span></a>
+    <a class="brand" href="/"><img src="/assets/shield.png" alt=""><span>The Unshaken Majority</span></a>
     <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav">Menu</button>
     <div class="nav-links" id="main-nav">
-      <a aria-current="page" href="index.html">Home</a>
-      <a href="investigations.html">Investigations</a>
-      <a href="standards.html">Our Standards</a>
-      <a href="contact.html">Contact</a>
-      <a class="nav-cta" href="submit.html">Submit a Case</a>
+      <a aria-current="page" href="/">Home</a>
+      <a href="/investigations">Investigations</a>
+      <a href="/standards">Our Standards</a>
+      <a href="/contact">Contact</a>
+      <a class="nav-cta" href="/submit">Submit a Case</a>
     </div>
   </nav>
 </header>
@@ -39,11 +39,11 @@
         <p class="tagline">The silent majority finally has a voice.</p>
         <p class="subline">We examine claims of unequal treatment, compare the evidence, invite responses from the people and organizations involved, and ask one question: are the same rules being applied to everyone?</p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="investigations.html">Explore the Same Standard Test</a>
-          <a class="btn btn-secondary" href="submit.html">Submit a Case</a>
+          <a class="btn btn-primary" href="/investigations">Explore the Same Standard Test</a>
+          <a class="btn btn-secondary" href="/submit">Submit a Case</a>
         </div>
       </div>
-      <div class="hero-mark"><img src="assets/shield.png" alt="The Unshaken Majority shield emblem"></div>
+      <div class="hero-mark"><img src="/assets/shield.png" alt="The Unshaken Majority shield emblem"></div>
     </div>
   </section>
 
@@ -65,7 +65,7 @@
   <section class="section section-dark">
     <div class="container">
       <div class="standard-panel">
-        <img src="assets/seal.png" alt="The Unshaken Majority formal seal">
+        <img src="/assets/seal.png" alt="The Unshaken Majority formal seal">
         <div>
           <span class="eyebrow">The Same Standard Test</span>
           <h2>One framework for every side</h2>
@@ -77,22 +77,20 @@
             <li>Was the difference explained, and is that explanation reasonable?</li>
             <li>What consistent standard should apply going forward?</li>
           </ul>
-          <div class="hero-actions"><a class="btn btn-primary" href="standards.html">Read our full standards</a></div>
+          <div class="hero-actions"><a class="btn btn-primary" href="/standards">Read our full standards</a></div>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="section section-silver">
+  <section class="section section-silver" id="latest-investigation-section" hidden>
     <div class="container">
-      <div class="callout">
-        <div>
-          <span class="badge">First investigation</span>
-          <h2>Our first Same Standard Test is being prepared</h2>
-          <p>We are documenting the evidence before publishing conclusions. The full case file will include the tested claims, source material, comparable examples, company rules, requests for comment, and any corrections or updates.</p>
-        </div>
-        <a class="btn btn-primary" href="investigations.html">View the case archive</a>
+      <div class="section-heading">
+        <span class="badge">Latest Investigation</span>
+        <h2>Newest published case file</h2>
+        <p>The latest published investigation is displayed automatically from the public case archive.</p>
       </div>
+      <article class="latest-investigation-card" id="latest-investigation-card" aria-live="polite"></article>
     </div>
   </section>
 
@@ -118,7 +116,7 @@
           <h2>Have evidence of a possible double standard?</h2>
           <p>Send the original source, the comparable case, and enough context for us to verify both sides. Do not send confidential or illegally obtained material.</p>
         </div>
-        <a class="btn btn-primary" href="submit.html">Submit a Case</a>
+        <a class="btn btn-primary" href="/submit">Submit a Case</a>
       </div>
     </div>
   </section>
@@ -126,11 +124,12 @@
 
 <footer class="site-footer">
   <div class="footer-inner">
-    <div class="footer-brand"><img src="assets/shield.png" alt=""><div><strong>The Unshaken Majority</strong><span>Same rules. No exceptions.</span></div></div>
-    <div class="footer-links"><a href="standards.html">Standards</a><a href="investigations.html">Investigations</a><a href="submit.html">Submit</a><a href="contact.html">Contact</a><a href="privacy.html">Privacy</a></div>
+    <div class="footer-brand"><img src="/assets/shield.png" alt=""><div><strong>The Unshaken Majority</strong><span>Same rules. No exceptions.</span></div></div>
+    <div class="footer-links"><a href="/standards">Standards</a><a href="/investigations">Investigations</a><a href="/submit">Submit</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a></div>
     <div class="footer-note">© <span data-current-year></span> The Unshaken Majority. Commentary and research presented for public discussion. Facts and conclusions may be updated as new evidence becomes available.</div>
   </div>
 </footer>
-<script src="script.js"></script>
+<script src="/script.js"></script>
+<script src="/latest-investigation.js"></script>
 </body>
 </html>

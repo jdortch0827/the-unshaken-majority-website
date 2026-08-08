@@ -195,6 +195,7 @@ async function initializeCaseForm(form) {
         email: formData.get('email'),
         title: formData.get('title'),
         organization: formData.get('organization'),
+        relatedCaseNumber: formData.get('relatedCaseNumber'),
         date: formData.get('date'),
         summary: formData.get('summary'),
         comparison: formData.get('comparison'),
@@ -316,6 +317,19 @@ async function initializeContactForm(form) {
     form.querySelector('input:not([type="hidden"])')?.focus();
   });
 }
+
+
+function applyCaseSubmissionPrefill() {
+  const field = document.querySelector('#related-case-number');
+  if (!field) return;
+  const params = new URLSearchParams(window.location.search);
+  const caseNumber = params.get('case');
+  const caseTitle = params.get('title');
+  if (caseNumber) field.value = caseNumber;
+  const titleField = document.querySelector('#title');
+  if (caseTitle && titleField && !titleField.value) titleField.value = `Additional evidence for ${caseNumber || caseTitle}`;
+}
+applyCaseSubmissionPrefill();
 
 const caseForm = document.querySelector('#case-form');
 if (caseForm) initializeCaseForm(caseForm);

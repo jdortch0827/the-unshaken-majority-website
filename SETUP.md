@@ -1,76 +1,129 @@
-# Secure Direct Forms — One-Time Setup
+# Investigation Publishing System Setup
 
-The website code is complete, but the direct forms need three free services connected through Vercel environment variables. Configure the services before replacing the live website so there is no form downtime.
+This package preserves the existing website and direct-submission system while adding the complete investigations archive, public case template, correction requests, private evidence handling, and protected administrator workspace.
 
-## 1. Create the Supabase project
+## 1. Existing environment variables
 
-1. Create a free project at `https://supabase.com/dashboard`.
-2. Open **SQL Editor**, create a new query, paste everything from `setup/supabase.sql`, and run it.
-3. Open **Project Settings → API**.
-4. Copy:
-   - Project URL → `SUPABASE_URL`
-   - Publishable/anon key → `SUPABASE_ANON_KEY`
-   - Server secret/service-role key → `SUPABASE_SERVICE_ROLE_KEY`
-5. Never place the server secret/service-role key in HTML or public JavaScript. It belongs only in Vercel Environment Variables.
+Keep the environment variables already configured in Vercel:
 
-The SQL creates private tables and a private `case-evidence` bucket. Website visitors cannot browse the tables or attachments.
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `TURNSTILE_SITE_KEY`
+- `TURNSTILE_SECRET_KEY`
+- `TURNSTILE_EXPECTED_HOSTNAME`
+- `SUBMISSION_SIGNING_SECRET`
+- `RESEND_API_KEY`
+- `RESEND_FROM`
+- `ADMIN_EMAIL`
+- `SITE_URL`
 
-## 2. Create the Cloudflare Turnstile widget
+No new environment variable is required for the investigations system.
 
-1. Open `https://dash.cloudflare.com/` and choose **Turnstile**.
-2. Add a widget named `The Unshaken Majority Forms`.
-3. Use **Managed** mode.
-4. Add the hostname `theunshakenmajority.com`. The root hostname also covers `www`.
-5. Copy the site key and secret key:
-   - Site key → `TURNSTILE_SITE_KEY`
-   - Secret key → `TURNSTILE_SECRET_KEY`
-6. Set `TURNSTILE_EXPECTED_HOSTNAME` to `www.theunshakenmajority.com`.
+## 2. Apply the database migration
 
-## 3. Create the Resend sender
+In Supabase, open **SQL Editor → New query**. Copy all of `setup/002_investigations.sql`, paste it into the editor, and click **Run**.
 
-1. Create a free account at `https://resend.com/`.
-2. Add and verify `theunshakenmajority.com` as a sending domain.
-3. Resend will provide DNS records. Because Vercel now controls the domain's nameservers, add those records in the Vercel domain DNS screen.
-4. Create an API key and copy it to `RESEND_API_KEY`.
-5. Use:
-   - `RESEND_FROM` = `The Unshaken Majority <submissions@theunshakenmajority.com>`
-   - `ADMIN_EMAIL` = `theunshakenmajority@gmail.com`
+The migration is designed to run after `setup/supabase.sql`. It creates the investigation tables, unique case-number generator, audit records, correction requests, private `investigation-evidence` bucket, indexes, row-level security, and the unpublished Coca-Cola draft.
 
-The `submissions@` address is a sending identity; it does not need to be a separate inbox. Replies from you can still come from the campaign Gmail account.
+Expected result: **Success. No rows returned.**
 
-## 4. Add the Vercel environment variables
+## 3. Create the first administrator
 
-In the Vercel project, open **Settings → Environment Variables**. Add every variable from `.env.example` for **Production**. Preview deployments need separate Turnstile test keys or an approved preview hostname, so do not blindly copy the production Turnstile hostname restriction into Preview.
+1. In Supabase, open **Authentication → Users**.
+2. Click **Add user** and create the administrator using a private email and strong password.
+3. Copy the user's UUID.
+4. Open `setup/003_bootstrap_admin.sql.example`.
+5. Replace `REPLACE_WITH_AUTH_USER_UUID` with the copied UUID.
+6. Run the statement in Supabase SQL Editor.
 
-For `SUBMISSION_SIGNING_SECRET`, use a long random value of at least 32 characters. A password manager-generated 64-character password is suitable.
+Supported roles:
 
-After saving the variables, redeploy the project.
+- `admin`: full editing, approval, publishing, archive, withdrawal, case-number override, and unpublished-draft deletion
+- `editor`: create and edit drafts, upload evidence, and submit for review
+- `reviewer`: review, approve, publish, unpublish, archive, and withdraw
 
-## 5. Upload this complete website
+## 4. Deploy
 
-Replace the repository contents with everything from this package, preserving the `api`, `assets`, and `setup` folders. Commit and let Vercel redeploy.
+Upload every file in this package to the existing GitHub repository, replacing matching files. Vercel will install the Supabase JavaScript dependency and redeploy automatically.
 
-## 6. Check configuration
+After the deployment is Ready, test:
 
-Open:
+- `/investigations`
+- `/standards`
+- `/admin/login`
+- `/api/health`
 
-`https://www.theunshakenmajority.com/api/health`
+Unpublished drafts and admin pages are marked noindex and are not returned by public investigation APIs.
 
-Every check should show `true`, and `ready` should show `true`. The endpoint reports only whether variables exist; it never returns secret values.
+## 5. Open the administrator dashboard
 
-## 7. Test both forms
+Go to:
 
-1. Submit a contact message.
-2. Confirm the success page shows a reference number.
-3. Confirm the campaign Gmail receives the notification.
-4. Confirm the sender receives a confirmation.
-5. Submit a test case with one small image or PDF.
-6. In Supabase, confirm:
-   - the row appears under **Table Editor → case_submissions**;
-   - the file appears under **Storage → case-evidence**;
-   - the bucket is marked **Private**.
-7. Delete the test records and files after testing.
+`https://www.theunshakenmajority.com/admin/login`
 
-## Free-plan expectations
+Sign in with the Supabase Authentication user created above. Successful sign-in redirects to:
 
-This launch setup can operate on the providers' free tiers at modest traffic. Free quotas and provider terms can change, and Supabase free projects may pause after inactivity. Review usage periodically before the campaign grows or becomes commercial.
+`https://www.theunshakenmajority.com/admin/investigations`
+
+## 6. Upload the Coca-Cola evidence
+
+1. Open the dashboard and select `UM-2026-001`.
+2. Open section **6. Evidence**.
+3. Find **Exhibit A — Pride phrase testing** and click **Fill Exhibit Slot**.
+4. Choose the actual recording or screenshot, verify the exhibit metadata, select the intended visibility, and click **Upload Exhibit File**.
+5. Repeat for:
+   - Exhibit B — Power phrase testing
+   - Exhibit C — Additional wording testing
+   - Exhibit D — Personalized products shown as out of stock
+6. Keep evidence **Private** or **Internal Review Only** until it is intentionally cleared for publication.
+7. For a public image, supply useful alt text. For public video or audio, supply a transcript or captions when available.
+8. Click **Save Draft** after reviewing all metadata.
+
+The original file remains private. Images receive an optimized WebP public preview while the original is preserved. An uploaded original cannot be silently overwritten; replacement requires an audited removal and a new exhibit upload.
+
+## 7. Review and publish UM-2026-001
+
+Before publishing:
+
+1. Review the title, case summary, exact claim, standard, methodology, comparisons, supported statement, and limitations.
+2. Confirm the right-of-response status is accurate. Do not select **Declined to Respond** unless the company actually declined.
+3. Add at least one structured source.
+4. Mark at least one real evidence exhibit **Public** and ensure it has an uploaded file or an original source URL.
+5. Review the preliminary finding and any remaining questions.
+6. Add a bottom-line statement and SEO description if desired.
+7. Click **Save Draft**.
+8. Click **Preview** and review the complete protected case page.
+9. Click **Submit for Internal Review**.
+10. An `admin` or `reviewer` clicks **Approve Investigation**.
+11. After final review, click **Publish Investigation**.
+
+The public page will then be available at:
+
+`https://www.theunshakenmajority.com/investigations/coca-cola-custom-can-filter`
+
+The archive and homepage Latest Investigation card update automatically.
+
+## 8. Corrections and material changes
+
+Every published investigation includes **Report an Error**. Requests appear in the protected dashboard and do not alter public content automatically.
+
+Any material change to published case content, status, right-of-response information, evidence metadata, comparisons, supported findings, limitations, sources, or the formal finding requires explicit confirmation and a public explanation. Previous wording and findings are preserved in revision history, and the appropriate public update entry is created.
+
+Published cases should normally be archived or withdrawn, not deleted. Permanent deletion is restricted to an administrator and only applies to a never-published draft.
+
+## 9. Validation commands
+
+With dependencies installed:
+
+```bash
+npm run check
+```
+
+Individual checks:
+
+```bash
+node scripts/validate.mjs
+npm run check:syntax
+npm test
+```

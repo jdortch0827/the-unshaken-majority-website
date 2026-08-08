@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Investigation Editor | The Unshaken Majority</title>
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <link rel="icon" href="/assets/favicon.png"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.0" defer></script>
+</head>
+<body class="admin-body" data-admin-page="editor">
+<header class="admin-header"><a class="admin-brand" href="/admin/investigations"><img src="/assets/shield.png" alt=""><span>Investigation Workspace</span></a><div class="admin-user"><span data-admin-user>Loading…</span><button class="admin-link-button" type="button" data-admin-logout>Sign Out</button></div></header>
+<main class="admin-main admin-editor-main" id="main">
+  <div id="admin-editor-loading" class="admin-loading">Loading investigation editor…</div>
+  <section id="new-investigation-panel" class="admin-panel admin-create-panel" hidden>
+    <span class="admin-kicker">Create Case File</span><h1>New Investigation</h1><p>A unique case number is assigned immediately and will never be reused.</p>
+    <form id="new-investigation-form" class="admin-form-grid">
+      <div class="field full"><label for="new-title">Title</label><input id="new-title" name="title" required maxlength="300"></div>
+      <div class="field full"><label for="new-subject">Subject or organization</label><input id="new-subject" name="subject" maxlength="300"></div>
+      <div class="field"><label for="new-category">Topic/category</label><select id="new-category" name="categoryId"><option value="">Uncategorized</option></select></div>
+      <div class="field"><label for="new-summary">Short summary</label><input id="new-summary" name="shortSummary" maxlength="1000"></div>
+      <div class="field full"><button class="btn btn-primary" type="submit">Create Investigation</button><p class="form-status" id="new-investigation-status" role="status"></p></div>
+    </form>
+  </section>
+
+  <div id="investigation-editor-panel" hidden>
+    <div class="editor-sticky-bar">
+      <div><a class="admin-back-link" href="/admin/investigations">← Dashboard</a><strong id="editor-case-label"></strong><span class="workflow-badge" id="editor-workflow-label"></span></div>
+      <div class="editor-save-actions"><span id="editor-save-state" class="save-state">Saved</span><button class="btn btn-light" type="button" id="preview-investigation">Preview</button><button class="btn btn-primary" type="button" id="save-investigation">Save Draft</button></div>
+    </div>
+    <div class="admin-alert" id="editor-status" hidden role="status" aria-live="polite"></div>
+    <form id="investigation-form" class="investigation-editor-form">
+      <details class="editor-section" open><summary><span>1</span> Basic Information</summary><div class="editor-section-body admin-form-grid">
+        <div class="field"><label for="case-number">Case number</label><input id="case-number" readonly></div>
+        <div class="field"><label for="workflow-status">Workflow</label><input id="workflow-status" readonly></div>
+        <div class="field full"><label for="investigation-title">Title</label><input id="investigation-title" data-parent="title" required maxlength="300"></div>
+        <div class="field full"><label for="investigation-subtitle">Subtitle</label><input id="investigation-subtitle" data-parent="subtitle" maxlength="300"></div>
+        <div class="field"><label for="investigation-slug">Slug</label><input id="investigation-slug" data-parent="slug" maxlength="120"></div>
+        <div class="field"><label for="investigation-subject">Subject or organization</label><input id="investigation-subject" data-parent="subject" maxlength="400"></div>
+        <div class="field"><label for="investigation-status">Public status</label><select id="investigation-status" data-parent="status"></select></div>
+        <div class="field"><label for="investigation-category">Topic/category</label><select id="investigation-category" data-parent="category_id"><option value="">Uncategorized</option></select></div>
+        <div class="field"><label for="investigation-date-opened">Date opened</label><input id="investigation-date-opened" data-parent="date_opened" type="date"></div>
+        <div class="field"><label for="investigation-evidence-type">Evidence type</label><input id="investigation-evidence-type" data-parent="evidence_type" maxlength="500"></div>
+        <div class="field"><label for="investigation-response-status">Response status</label><select id="investigation-response-status" data-parent="response_status"></select></div>
+        <div class="field"><label for="investigation-editor">Assigned editor</label><select id="investigation-editor" data-parent="assigned_editor_id"></select></div>
+        <div class="field full checkbox-field"><input id="public-status-visible" data-parent="public_status_visible" type="checkbox"><label for="public-status-visible">Show the current status in the public archive when this case is published.</label></div>
+        <div class="field full"><label for="investigation-tags">Tags <span class="optional">comma-separated</span></label><input id="investigation-tags" placeholder="personalization, consumer policy"></div>
+      </div></details>
+
+      <details class="editor-section" open><summary><span>2</span> Case Summary</summary><div class="editor-section-body">
+        <div class="field"><label for="short-summary">Short archive summary</label><textarea id="short-summary" data-parent="short_summary" maxlength="1200"></textarea></div>
+        <div class="field"><label>Full case summary</label><div class="rich-toolbar" data-toolbar="case-summary-editor"></div><div id="case-summary-editor" class="rich-editor" contenteditable="true" data-rich="case_summary_html" role="textbox" aria-multiline="true"></div></div>
+      </div></details>
+
+      <details class="editor-section"><summary><span>3</span> Claim and Standard</summary><div class="editor-section-body admin-form-grid">
+        <div class="field full"><label>Claim being examined</label><div class="rich-toolbar" data-toolbar="claim-editor"></div><div id="claim-editor" class="rich-editor" contenteditable="true" data-rich="claim_html" role="textbox" aria-multiline="true"></div></div>
+        <div class="field full"><label>Standard being applied</label><div class="rich-toolbar" data-toolbar="standard-editor"></div><div id="standard-editor" class="rich-editor" contenteditable="true" data-rich="standard_html" role="textbox" aria-multiline="true"></div></div>
+      </div></details>
+
+      <details class="editor-section"><summary><span>4</span> Methodology</summary><div class="editor-section-body"><div class="field"><label>Methodology</label><div class="rich-toolbar" data-toolbar="methodology-editor"></div><div id="methodology-editor" class="rich-editor" contenteditable="true" data-rich="methodology_html" role="textbox" aria-multiline="true"></div><p class="help">Document dates, platforms, firsthand testing, variables changed, limitations, and whether results cover an initial screen or completed transaction.</p></div></div></details>
+
+      <details class="editor-section"><summary><span>5</span> Test Results</summary><div class="editor-section-body"><div id="comparison-repeater" class="repeater"></div><button class="btn btn-light" type="button" data-add-row="comparison">Add Comparison Row</button></div></details>
+
+      <details class="editor-section"><summary><span>6</span> Evidence</summary><div class="editor-section-body">
+        <div class="evidence-upload-panel"><h3>Upload Evidence</h3><div class="admin-form-grid">
+          <div class="field"><label for="evidence-exhibit-label">Exhibit label</label><input id="evidence-exhibit-label" placeholder="Exhibit A"></div>
+          <div class="field"><label for="evidence-title">Title</label><input id="evidence-title"></div>
+          <div class="field"><label for="evidence-type">Evidence type</label><select id="evidence-type"></select></div>
+          <div class="field"><label for="evidence-visibility">Visibility</label><select id="evidence-visibility"></select></div>
+          <div class="field full"><label for="evidence-description">Description</label><textarea id="evidence-description"></textarea></div>
+          <div class="field"><label for="evidence-captured">Date captured</label><input id="evidence-captured" type="datetime-local"></div>
+          <div class="field"><label for="evidence-source-name">Source</label><input id="evidence-source-name"></div>
+          <div class="field full"><label for="evidence-source-url">Original source URL</label><input id="evidence-source-url" type="url" placeholder="https://"></div>
+          <div class="field full"><label for="evidence-authenticity">Authenticity or editing note</label><textarea id="evidence-authenticity"></textarea></div>
+          <div class="field full"><label for="evidence-alt">Image alt text or media description</label><input id="evidence-alt"></div>
+          <div class="field full"><label for="evidence-transcript">Transcript or captions</label><textarea id="evidence-transcript"></textarea></div>
+          <div class="field full"><label for="evidence-file">Original evidence file</label><div id="evidence-drop-zone" class="drop-zone"><input id="evidence-file" type="file" accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,.mp3,.wav,.m4a,.pdf,.doc,.docx,.txt,.csv"><p>Drag and drop a file here or choose a file. Maximum 50 MB.</p></div></div>
+          <div class="field checkbox-field"><input id="evidence-download" type="checkbox"><label for="evidence-download">Allow a public download link when this exhibit is public.</label></div>
+          <div class="field checkbox-field"><input id="evidence-featured" type="checkbox"><label for="evidence-featured">Use as the featured case image when appropriate.</label></div>
+          <div class="field full"><button class="btn btn-primary" id="upload-evidence" type="button">Upload Evidence</button><div class="upload-progress" id="admin-evidence-progress" hidden><div class="upload-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div><p class="help" data-progress-text>Preparing upload…</p></div></div>
+        </div></div>
+        <div id="evidence-admin-list" class="admin-evidence-list"></div>
+      </div></details>
+
+      <details class="editor-section"><summary><span>7</span> Supported Findings</summary><div class="editor-section-body"><div id="supported-repeater" class="repeater"></div><button class="btn btn-light" type="button" data-add-row="supported">Add Supported Statement</button></div></details>
+      <details class="editor-section"><summary><span>8</span> Limitations</summary><div class="editor-section-body"><p class="notice"><strong>Required before publication:</strong> State what the evidence does not establish.</p><div id="limitations-repeater" class="repeater"></div><button class="btn btn-light" type="button" data-add-row="limitation">Add Limitation</button></div></details>
+
+      <details class="editor-section"><summary><span>9</span> Right of Response</summary><div class="editor-section-body admin-form-grid">
+        <div class="field checkbox-field"><input id="response-contacted" type="checkbox"><label for="response-contacted">The subject was contacted.</label></div>
+        <div class="field"><label for="response-status">Response status</label><select id="response-status"></select></div>
+        <div class="field"><label for="response-contacted-at">Date contacted</label><input id="response-contacted-at" type="datetime-local"></div>
+        <div class="field"><label for="response-method">Contact method</label><input id="response-method"></div>
+        <div class="field"><label for="response-deadline">Response deadline</label><input id="response-deadline" type="datetime-local"></div>
+        <div class="field"><label for="response-received-at">Response received date</label><input id="response-received-at" type="datetime-local"></div>
+        <div class="field full"><label>Full or summarized response</label><div class="rich-toolbar" data-toolbar="response-editor"></div><div id="response-editor" class="rich-editor" contenteditable="true" data-response-rich="response_html" role="textbox" aria-multiline="true"></div></div>
+        <div class="field full"><label for="response-document-url">Response document URL</label><input id="response-document-url" type="url" placeholder="https://"></div>
+        <div class="field full"><label>Editorial note</label><div class="rich-toolbar" data-toolbar="response-note-editor"></div><div id="response-note-editor" class="rich-editor" contenteditable="true" data-response-rich="editorial_note_html" role="textbox" aria-multiline="true"></div></div>
+        <div class="field full checkbox-field"><input id="response-public" type="checkbox"><label for="response-public">Display this response record publicly.</label></div>
+        <div class="field full"><h3>Questions submitted or prepared</h3><div id="response-question-repeater" class="repeater"></div><button class="btn btn-light" type="button" data-add-row="response-question">Add Response Question</button></div>
+      </div></details>
+
+      <details class="editor-section"><summary><span>10</span> Finding</summary><div class="editor-section-body admin-form-grid">
+        <div class="field"><label for="finding-type">Finding classification</label><select id="finding-type"></select></div>
+        <div class="field"><label for="finding-stage">Stage</label><select id="finding-stage"><option>Preliminary</option><option>Final</option></select></div>
+        <div class="field full" id="custom-finding-field" hidden><label for="custom-finding-label">Custom finding label</label><input id="custom-finding-label"></div>
+        <div class="field full"><label for="finding-headline">Finding headline</label><input id="finding-headline" maxlength="500"></div>
+        <div class="field full"><label>Finding explanation</label><div class="rich-toolbar" data-toolbar="finding-editor"></div><div id="finding-editor" class="rich-editor" contenteditable="true" data-finding-rich="explanation_html" role="textbox" aria-multiline="true"></div></div>
+        <div class="field"><label for="finding-issued">Date issued</label><input id="finding-issued" type="datetime-local"></div>
+        <div class="field"><label for="finding-approver">Approving editor name or role</label><input id="finding-approver"></div>
+        <div class="field full material-change-confirm" id="material-change-confirm" hidden><p class="notice"><strong>Published material change:</strong> Confirm any change to a previously published status, company response, or finding and provide a public explanation. Prior findings and update-log entries remain preserved.</p><div class="checkbox-field"><input id="confirm-material-change" type="checkbox"><label for="confirm-material-change">I confirm this material change to the published case record.</label></div><label for="finding-change-description">Public explanation of the change</label><textarea id="finding-change-description"></textarea></div>
+      </div></details>
+
+      <details class="editor-section"><summary><span>11</span> Sources</summary><div class="editor-section-body"><div id="source-repeater" class="repeater"></div><button class="btn btn-light" type="button" data-add-row="source">Add Source</button></div></details>
+      <details class="editor-section"><summary><span>12</span> Corrections and Updates</summary><div class="editor-section-body"><div id="update-repeater" class="repeater"></div><button class="btn btn-light" type="button" data-add-row="update">Add Public Update</button></div></details>
+      <details class="editor-section"><summary><span>13</span> Questions Remaining and Closing Statement</summary><div class="editor-section-body"><div id="remaining-question-repeater" class="repeater"></div><button class="btn btn-light" type="button" data-add-row="remaining-question">Add Remaining Question</button><div class="field" style="margin-top:24px"><label>Bottom-line statement</label><div class="rich-toolbar" data-toolbar="bottom-line-editor"></div><div id="bottom-line-editor" class="rich-editor" contenteditable="true" data-rich="bottom_line_html" role="textbox" aria-multiline="true"></div></div></div></details>
+      <details class="editor-section"><summary><span>14</span> SEO and Sharing</summary><div class="editor-section-body admin-form-grid"><div class="field full"><label for="seo-title">Page title</label><input id="seo-title" data-parent="seo_title" maxlength="180"></div><div class="field full"><label for="seo-description">Meta description</label><textarea id="seo-description" data-parent="seo_description" maxlength="320"></textarea></div><div class="field full"><label for="social-image-path">Social image storage path <span class="optional">optional</span></label><input id="social-image-path" data-parent="social_image_path" maxlength="500"><p class="help">Leave blank to use the featured public evidence image or the default brand image.</p></div></div></details>
+      <details class="editor-section" open><summary><span>15</span> Review and Publish</summary><div class="editor-section-body"><div class="workflow-actions" id="workflow-actions"></div><div class="danger-zone"><h3>Restricted Actions</h3><div class="workflow-danger-actions" id="workflow-danger-actions"></div></div><div class="revision-panel"><h3>Revision History</h3><div id="revision-list"></div></div><div class="audit-panel"><h3>Recent Audit Events</h3><div id="audit-list"></div></div></div></details>
+    </form>
+  </div>
+</main>
+<script src="/admin.js"></script>
+</body>
+</html>

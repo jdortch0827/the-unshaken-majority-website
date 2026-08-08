@@ -1,26 +1,97 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Investigations | The Unshaken Majority</title>
-  <meta name="description" content="The Same Standard Test case archive from The Unshaken Majority.">
-  <link rel="icon" href="assets/favicon.png"><link rel="stylesheet" href="styles.css">
+  <meta name="description" content="Published investigations, evidence, findings, responses, sources, and corrections from The Unshaken Majority.">
+  <link rel="canonical" href="https://www.theunshakenmajority.com/investigations">
+  <meta property="og:title" content="Investigations | The Unshaken Majority">
+  <meta property="og:description" content="Structured investigations applying one evidence standard to every side.">
+  <meta property="og:image" content="https://www.theunshakenmajority.com/assets/social-preview.jpg">
+  <meta property="og:url" content="https://www.theunshakenmajority.com/investigations">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/assets/favicon.png">
+  <link rel="stylesheet" href="/styles.css">
 </head>
-<body>
+<body data-investigations-page="archive">
 <a class="skip-link" href="#main">Skip to content</a>
-<header class="site-header"><nav class="nav-wrap" aria-label="Main navigation"><a class="brand" href="index.html"><img src="assets/shield.png" alt=""><span>The Unshaken Majority</span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav">Menu</button><div class="nav-links" id="main-nav"><a href="index.html">Home</a><a aria-current="page" href="investigations.html">Investigations</a><a href="standards.html">Our Standards</a><a href="contact.html">Contact</a><a class="nav-cta" href="submit.html">Submit a Case</a></div></nav></header>
+<header class="site-header">
+  <nav class="nav-wrap" aria-label="Main navigation">
+    <a class="brand" href="/"><img src="/assets/shield.png" alt=""><span>The Unshaken Majority</span></a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav">Menu</button>
+    <div class="nav-links" id="main-nav">
+      <a href="/">Home</a>
+      <a aria-current="page" href="/investigations">Investigations</a>
+      <a href="/standards">Our Standards</a>
+      <a href="/contact">Contact</a>
+      <a class="nav-cta" href="/submit">Submit a Case</a>
+    </div>
+  </nav>
+</header>
 <main id="main">
-<section class="page-hero"><div class="container"><span class="eyebrow">Case archive</span><h1>Investigations</h1><p>Each case will preserve the evidence, comparison, response, conclusion, sources, and correction history in one permanent record.</p></div></section>
-<section class="section"><div class="container">
-  <div class="section-heading"><span class="badge">In preparation</span><h2>First Same Standard Test</h2><p>Evidence collection and source verification are underway. No conclusion will be published until the tested claims, relevant rules, and comparable examples have been documented.</p></div>
-  <div class="card-grid">
-    <article class="card"><h3>Status</h3><p>Evidence collection and comparison design.</p></article>
-    <article class="card"><h3>What the final file will include</h3><p>Original screenshots, dates, tested inputs, published rules, comparable cases, correspondence, analysis, and updates.</p></article>
-    <article class="card"><h3>Corrections</h3><p>Any meaningful correction or new evidence will be dated and preserved with the case.</p></article>
-  </div>
-  <div class="rule-box" style="margin-top:32px"><strong>Why no accusation appears here yet:</strong> A campaign about consistent standards must apply that same caution to its own claims. We will publish the evidence first and let the conclusion follow from it.</div>
-</div></section>
+  <section class="page-hero case-archive-hero">
+    <div class="container">
+      <span class="eyebrow">Public case archive</span>
+      <h1>Investigations</h1>
+      <p>Every published case preserves the claim, standard, methodology, exhibits, response record, finding, sources, and correction history in one permanent file.</p>
+    </div>
+  </section>
+
+  <section class="section archive-section">
+    <div class="container">
+      <form class="archive-filters" id="investigation-filters" role="search" aria-label="Search and filter investigations">
+        <div class="field archive-search">
+          <label for="archive-keyword">Keyword</label>
+          <input id="archive-keyword" name="keyword" type="search" placeholder="Case number, title, subject, or issue">
+        </div>
+        <div class="field">
+          <label for="archive-subject">Subject or company</label>
+          <select id="archive-subject" name="subject"><option value="">All subjects</option></select>
+        </div>
+        <div class="field">
+          <label for="archive-status">Case status</label>
+          <select id="archive-status" name="status"><option value="">All statuses</option></select>
+        </div>
+        <div class="field">
+          <label for="archive-finding">Finding</label>
+          <select id="archive-finding" name="finding"><option value="">All findings</option></select>
+        </div>
+        <div class="field">
+          <label for="archive-year">Year</label>
+          <select id="archive-year" name="year"><option value="">All years</option></select>
+        </div>
+        <div class="field">
+          <label for="archive-category">Topic</label>
+          <select id="archive-category" name="category"><option value="">All topics</option></select>
+        </div>
+        <div class="archive-filter-actions">
+          <button class="btn btn-primary" type="submit">Apply Filters</button>
+          <button class="btn btn-light" type="button" id="clear-filters">Clear</button>
+        </div>
+      </form>
+
+      <div class="archive-summary" aria-live="polite">
+        <p id="archive-count">Loading published investigations…</p>
+      </div>
+      <div id="investigation-grid" class="investigation-grid" aria-live="polite"></div>
+      <div id="archive-empty" class="archive-empty" hidden>
+        <img src="/assets/shield.png" alt="">
+        <h2>No published investigations match these filters.</h2>
+        <p>Clear the filters or return later as additional case files are published.</p>
+      </div>
+      <div class="load-more-wrap"><button class="btn btn-primary" id="load-more-investigations" type="button" hidden>Load More</button></div>
+    </div>
+  </section>
 </main>
-<footer class="site-footer"><div class="footer-inner"><div class="footer-brand"><img src="assets/shield.png" alt=""><div><strong>The Unshaken Majority</strong><span>Same rules. No exceptions.</span></div></div><div class="footer-links"><a href="standards.html">Standards</a><a href="investigations.html">Investigations</a><a href="submit.html">Submit</a><a href="contact.html">Contact</a><a href="privacy.html">Privacy</a></div><div class="footer-note">© <span data-current-year></span> The Unshaken Majority.</div></div></footer>
-<script src="script.js"></script>
-</body></html>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand"><img src="/assets/shield.png" alt=""><div><strong>The Unshaken Majority</strong><span>Same rules. No exceptions.</span></div></div>
+    <div class="footer-links"><a href="/standards">Standards</a><a href="/investigations">Investigations</a><a href="/submit">Submit</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a></div>
+    <div class="footer-note">© <span data-current-year></span> The Unshaken Majority. Published findings may be updated when new evidence, responses, or corrections warrant a change.</div>
+  </div>
+</footer>
+<script src="/script.js"></script>
+<script src="/investigations.js"></script>
+</body>
+</html>

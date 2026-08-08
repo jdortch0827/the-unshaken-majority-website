@@ -1,3 +1,6 @@
 User-agent: *
 Allow: /
-Sitemap: https://theunshakenmajority.com/sitemap.xml
+Disallow: /admin
+Disallow: /api/admin-
+
+Sitemap: https://www.theunshakenmajority.com/sitemap.xml
