@@ -1,0 +1,17 @@
+{
+  "name": "the-unshaken-majority-website",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "check": "node scripts/validate.mjs && npm run check:syntax && npm test",
+    "check:syntax": "find . -path ./node_modules -prune -o -name '*.js' -type f -print0 | xargs -0 -n1 node --check",
+    "test": "node --test scripts/test-investigations.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.0"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "functions": {
+    "api/*.js": {
+      "maxDuration": 15,
+      "includeFiles": "investigation.html"
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
+      ]
+    },
+    {
+      "source": "/admin/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" },
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" }
+      ]
+    },
+    {
+      "source": "/api/admin-(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" },
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/server/:path*", "destination": "/404.html" },
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
+    { "source": "/investigations/:slug", "destination": "/api/investigation-page?slug=:slug" },
+    { "source": "/admin", "destination": "/admin-login.html" },
+    { "source": "/admin/login", "destination": "/admin-login.html" },
+    { "source": "/admin/investigations/new", "destination": "/admin-investigation-editor.html?mode=new" },
+    { "source": "/admin/investigations/:id/edit", "destination": "/admin-investigation-editor.html?id=:id" },
+    { "source": "/admin/investigations/:id/preview", "destination": "/admin-preview.html?id=:id" },
+    { "source": "/admin/investigations", "destination": "/admin-investigations.html" }
+  ]
+}

@@ -24,6 +24,7 @@ function adminEmailHtml(submission, attachments) {
       <p><strong>Name or alias:</strong> ${escapeHtml(submission.name_or_alias || 'Not provided')}</p>
       <p><strong>Reply email:</strong> ${escapeHtml(submission.email || 'Not provided')}</p>
       <p><strong>Organization or issue:</strong> ${escapeHtml(submission.organization || 'Not provided')}</p>
+      <p><strong>Related investigation:</strong> ${escapeHtml(submission.related_case_number || 'Not provided')}</p>
       <p><strong>Date observed:</strong> ${escapeHtml(submission.observed_date || 'Not provided')}</p>
       <h2>What happened?</h2><p>${htmlMultiline(submission.summary)}</p>
       <h2>Comparable case</h2><p>${htmlMultiline(submission.comparison)}</p>

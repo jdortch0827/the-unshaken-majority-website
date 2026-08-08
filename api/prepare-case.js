@@ -40,6 +40,7 @@ export default async function handler(req, res) {
       email: email || null,
       title: cleanText(payload.title, 220, { required: true, label: 'Short case title' }),
       organization: cleanText(payload.organization, 220, { label: 'Organization or issue' }) || null,
+      related_case_number: cleanText(payload.relatedCaseNumber, 40, { label: 'Related investigation case number' }) || null,
       observed_date: cleanDate(payload.date),
       summary: cleanText(payload.summary, 12000, { required: true, label: 'What happened' }),
       comparison: cleanText(payload.comparison, 12000, { required: true, label: 'Comparable case' }),
