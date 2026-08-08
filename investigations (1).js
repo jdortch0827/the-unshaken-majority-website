@@ -1,525 +1,403 @@
-(() => {
-  const page = document.body.dataset.investigationsPage;
-  if (!page) return;
+import crypto from 'node:crypto';
+import { getSupabaseAdmin, ValidationError, cleanText, sanitizeFilename } from './shared.js';
 
-  const escapeHtml = (value) => String(value ?? '')
-    .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+export const INVESTIGATION_BUCKET = 'investigation-evidence';
+export const PUBLIC_WORKFLOWS = new Set(['published', 'withdrawn', 'archived']);
+export const ADMIN_ROLES = new Set(['admin', 'editor', 'reviewer']);
+export const EDIT_ROLES = new Set(['admin', 'editor']);
+export const APPROVE_ROLES = new Set(['admin', 'reviewer']);
+export const PUBLIC_STATUSES = [
+  'Open Investigation', 'Awaiting Response', 'Under Review', 'Preliminary Finding',
+  'Final Finding', 'Inconclusive', 'Corrected', 'Withdrawn', 'Archived'
+];
+export const FINDING_TYPES = [
+  'Supported', 'Partially Supported', 'Unsupported', 'Misleading',
+  'Inconsistent Enforcement', 'Insufficient Evidence', 'Inconclusive',
+  'Corrected', 'Withdrawn', 'Custom'
+];
+export const RESPONSE_STATUSES = [
+  'Not Yet Contacted', 'Contacted', 'Awaiting Response', 'Response Received',
+  'Declined to Respond', 'No Response Received', 'Response Published'
+];
+export const WORKFLOW_STATUSES = ['draft', 'internal_review', 'approved', 'published', 'archived', 'withdrawn'];
+export const EVIDENCE_VISIBILITIES = [
+  'Public', 'Private', 'Internal Review Only', 'Withheld for Privacy',
+  'Withheld for Legal or Safety Reasons'
+];
+export const EVIDENCE_TYPES = [
+  'Screenshot', 'Screen Recording', 'Video', 'Audio', 'PDF', 'Document',
+  'Webpage', 'Email', 'Public Statement', 'Data Table', 'Other'
+];
+export const UPDATE_TYPES = [
+  'Evidence Added', 'Company Response Added', 'Clarification', 'Correction',
+  'Finding Updated', 'Status Updated', 'Source Added', 'Investigation Withdrawn', 'Other'
+];
+export const SOURCE_TYPES = [
+  'Primary Record', 'Official Policy', 'Webpage', 'News Report', 'Academic Research',
+  'Public Statement', 'Court Record', 'Government Record', 'Data', 'Other'
+];
 
-  function formatDate(value, includeTime = false) {
-    if (!value) return 'Not provided';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return String(value);
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric', month: 'long', day: 'numeric',
-      ...(includeTime ? { hour: 'numeric', minute: '2-digit' } : {})
-    }).format(date);
-  }
+const ADMIN_FILE_TYPES = new Set([
+  'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+  'video/mp4', 'video/webm', 'audio/mpeg', 'audio/wav', 'audio/mp4', 'audio/x-m4a',
+  'application/pdf', 'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain', 'text/csv'
+]);
+const ADMIN_FILE_EXTENSIONS = new Set([
+  'jpg', 'jpeg', 'png', 'webp', 'gif', 'mp4', 'webm', 'mp3', 'wav', 'm4a',
+  'pdf', 'doc', 'docx', 'txt', 'csv'
+]);
+export const ADMIN_MAX_FILE_SIZE = 50 * 1024 * 1024;
 
-  function setText(selector, value, { hideEmpty = false } = {}) {
-    const element = document.querySelector(selector);
-    if (!element) return;
-    const text = value == null ? '' : String(value);
-    element.textContent = text;
-    if (hideEmpty) element.hidden = !text;
-  }
+export function slugify(value) {
+  return String(value || '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 120) || `investigation-${Date.now()}`;
+}
 
-  async function fetchJson(url) {
-    const response = await fetch(url, { headers: { Accept: 'application/json' }, cache: 'no-store' });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok || !data.ok) throw new Error(data.error || 'The requested information could not be loaded.');
-    return data;
-  }
+function escapeText(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
 
-  function statusClass(value) {
-    return `status-${String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
-  }
+function safeHref(raw) {
+  const href = String(raw || '').trim();
+  if (!href) return '';
+  if (/^(https?:\/\/|mailto:|\/)/i.test(href)) return href;
+  return '';
+}
 
-  function investigationCard(item) {
-    const article = document.createElement('article');
-    article.className = 'investigation-card';
-    const finding = item.finding_label || 'No finding issued';
-    const date = item.updated_at || item.published_at || item.date_opened;
-    article.innerHTML = `
-      <div class="investigation-card-top">
-        <span class="case-number">${escapeHtml(item.case_number)}</span>
-        ${item.status ? `<span class="status-badge ${statusClass(item.status)}">${escapeHtml(item.status)}</span>` : ''}
-      </div>
-      ${item.featured_image?.url ? `<img class="investigation-card-image" src="${escapeHtml(item.featured_image.url)}" alt="${escapeHtml(item.featured_image.alt || item.title)}" loading="lazy">` : ''}
-      <div class="investigation-card-body">
-        ${item.category?.name ? `<span class="case-topic">${escapeHtml(item.category.name)}</span>` : ''}
-        <h2><a href="/investigations/${encodeURIComponent(item.slug)}">${escapeHtml(item.title)}</a></h2>
-        ${item.subtitle ? `<p class="investigation-subtitle">${escapeHtml(item.subtitle)}</p>` : ''}
-        <p class="investigation-summary">${escapeHtml(item.short_summary || 'Open the complete case file for the documented evidence and findings.')}</p>
-        <dl class="card-meta">
-          <div><dt>Subject</dt><dd>${escapeHtml(item.subject || 'Not specified')}</dd></div>
-          <div><dt>Finding</dt><dd><span class="finding-badge">${escapeHtml(finding)}</span></dd></div>
-          <div><dt>Opened</dt><dd>${escapeHtml(formatDate(item.date_opened))}</dd></div>
-          <div><dt>Updated</dt><dd>${escapeHtml(formatDate(date))}</dd></div>
-        </dl>
-      </div>
-      <a class="btn btn-primary card-button" href="/investigations/${encodeURIComponent(item.slug)}">View Full Investigation</a>`;
-    return article;
-  }
-
-  async function initializeArchive() {
-    const form = document.querySelector('#investigation-filters');
-    const grid = document.querySelector('#investigation-grid');
-    const empty = document.querySelector('#archive-empty');
-    const count = document.querySelector('#archive-count');
-    const loadMore = document.querySelector('#load-more-investigations');
-    const clear = document.querySelector('#clear-filters');
-    let pageNumber = 1;
-    let filterOptionsLoaded = false;
-
-    function queryString(pageValue = 1) {
-      const data = new FormData(form);
-      const params = new URLSearchParams({ page: String(pageValue), pageSize: '9' });
-      for (const [key, value] of data.entries()) if (String(value).trim()) params.set(key, String(value).trim());
-      return params.toString();
-    }
-
-    function addOptions(selectId, values, valueKey = null, labelKey = null) {
-      const select = document.querySelector(selectId);
-      if (!select) return;
-      for (const item of values || []) {
-        const value = valueKey ? item[valueKey] : item;
-        const label = labelKey ? item[labelKey] : item;
-        if (!value || [...select.options].some((option) => option.value === String(value))) continue;
-        select.add(new Option(String(label), String(value)));
+/**
+ * Small allow-list sanitizer for administrator-authored rich text. The editor only
+ * offers these tags, and the server removes every attribute except a safe link href.
+ */
+export function sanitizeRichText(input, maxLength = 50000) {
+  const html = String(input || '').replace(/\0/g, '').slice(0, maxLength);
+  if (!html.trim()) return '';
+  const withoutDangerous = html
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<\/?(?:script|style|iframe|object|embed|form|input|button|svg|math)[^>]*>/gi, '');
+  const allowed = new Set(['p', 'h2', 'h3', 'strong', 'b', 'em', 'i', 'ol', 'ul', 'li', 'blockquote', 'a', 'br']);
+  let output = '';
+  let lastIndex = 0;
+  const tagPattern = /<\/?[a-zA-Z0-9]+\b[^>]*>/g;
+  for (const match of withoutDangerous.matchAll(tagPattern)) {
+    output += escapeText(withoutDangerous.slice(lastIndex, match.index));
+    const tagText = match[0];
+    const closing = /^<\//.test(tagText);
+    const nameMatch = tagText.match(/^<\/?\s*([a-zA-Z0-9]+)/);
+    const name = nameMatch?.[1]?.toLowerCase();
+    if (name && allowed.has(name)) {
+      if (closing) {
+        if (name !== 'br') output += `</${name}>`;
+      } else if (name === 'a') {
+        const hrefMatch = tagText.match(/\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i);
+        const href = safeHref(hrefMatch?.[1] || hrefMatch?.[2] || hrefMatch?.[3]);
+        output += href ? `<a href="${escapeText(href)}" target="_blank" rel="noopener noreferrer">` : '<a>';
+      } else if (name === 'br') {
+        output += '<br>';
+      } else {
+        output += `<${name}>`;
       }
     }
+    lastIndex = (match.index || 0) + tagText.length;
+  }
+  output += escapeText(withoutDangerous.slice(lastIndex));
+  return output.trim();
+}
 
-    async function load({ append = false } = {}) {
-      count.textContent = 'Loading published investigations…';
-      loadMore.disabled = true;
-      try {
-        const data = await fetchJson(`/api/investigations?${queryString(pageNumber)}`);
-        if (!filterOptionsLoaded) {
-          addOptions('#archive-subject', data.filters.subjects);
-          addOptions('#archive-status', data.filters.statuses);
-          addOptions('#archive-finding', data.filters.findings);
-          addOptions('#archive-year', data.filters.years);
-          addOptions('#archive-category', data.filters.categories, 'slug', 'name');
-          filterOptionsLoaded = true;
-        }
-        if (!append) grid.replaceChildren();
-        data.items.forEach((item) => grid.append(investigationCard(item)));
-        empty.hidden = data.pagination.total !== 0;
-        count.textContent = `${data.pagination.total.toLocaleString()} published investigation${data.pagination.total === 1 ? '' : 's'}`;
-        loadMore.hidden = !data.pagination.hasMore;
-        loadMore.disabled = false;
-      } catch (error) {
-        grid.replaceChildren();
-        empty.hidden = false;
-        empty.querySelector('h2').textContent = 'The investigation archive could not be loaded.';
-        empty.querySelector('p').textContent = error.message;
-        count.textContent = '';
-        loadMore.hidden = true;
-      }
-    }
+export function cleanOptionalDateTime(value) {
+  const text = cleanText(value, 40);
+  if (!text) return null;
+  const date = new Date(text);
+  if (Number.isNaN(date.getTime())) throw new ValidationError('A date or time value is invalid.');
+  return date.toISOString();
+}
 
-    form.addEventListener('submit', (event) => {
-      event.preventDefault();
-      pageNumber = 1;
-      load();
-    });
-    clear.addEventListener('click', () => {
-      form.reset();
-      pageNumber = 1;
-      load();
-    });
-    loadMore.addEventListener('click', () => {
-      pageNumber += 1;
-      load({ append: true });
-    });
-    let debounce;
-    form.querySelector('input[type="search"]')?.addEventListener('input', () => {
-      clearTimeout(debounce);
-      debounce = setTimeout(() => { pageNumber = 1; load(); }, 350);
-    });
-    await load();
+export function cleanOptionalDate(value) {
+  const text = cleanText(value, 10);
+  if (!text) return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) throw new ValidationError('A date value is invalid.');
+  return text;
+}
+
+export function cleanUrl(value, { required = false, label = 'URL' } = {}) {
+  const text = cleanText(value, 2048, { required, label });
+  if (!text) return null;
+  let url;
+  try { url = new URL(text); } catch { throw new ValidationError(`${label} must be a valid web address.`); }
+  if (!['http:', 'https:'].includes(url.protocol)) throw new ValidationError(`${label} must begin with http:// or https://.`);
+  return url.toString();
+}
+
+export function bearerToken(req) {
+  const header = req.headers.authorization || '';
+  const match = String(header).match(/^Bearer\s+(.+)$/i);
+  return match?.[1] || '';
+}
+
+export async function getAuthenticatedAdmin(req, allowedRoles = ADMIN_ROLES) {
+  const token = bearerToken(req);
+  if (!token) throw new AuthError('Sign in is required.', 401);
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase.auth.getUser(token);
+  const user = data?.user;
+  if (error || !user) throw new AuthError('Your administrator session is invalid or expired.', 401);
+  const { data: profile, error: profileError } = await supabase
+    .from('admin_profiles')
+    .select('user_id, display_name, role, active')
+    .eq('user_id', user.id)
+    .single();
+  if (profileError || !profile || !profile.active || !allowedRoles.has(profile.role)) {
+    throw new AuthError('This account is not authorized for the investigation workspace.', 403);
+  }
+  return { user, profile, token, supabase };
+}
+
+export class AuthError extends Error {
+  constructor(message, status = 401) {
+    super(message);
+    this.name = 'AuthError';
+    this.status = status;
+  }
+}
+
+export function investigationError(error) {
+  if (error instanceof ValidationError) return { status: 400, message: error.message };
+  if (error instanceof AuthError) return { status: error.status, message: error.message };
+  console.error(error);
+  return { status: 500, message: 'The investigation operation could not be completed.' };
+}
+
+export async function audit(supabase, { investigationId = null, actorUserId = null, action, details = {} }) {
+  const { error } = await supabase.from('investigation_audit_logs').insert({
+    investigation_id: investigationId,
+    actor_user_id: actorUserId,
+    action,
+    details
+  });
+  if (error) console.error('Audit log error:', error);
+}
+
+async function signedUrl(supabase, path, expiresIn = 900) {
+  if (!path) return null;
+  const { data, error } = await supabase.storage.from(INVESTIGATION_BUCKET).createSignedUrl(path, expiresIn);
+  if (error) return null;
+  return data?.signedUrl || null;
+}
+
+export async function fetchInvestigationBundle(supabase, id, { includeAdmin = false, includeSignedUrls = false } = {}) {
+  const { data: investigation, error } = await supabase
+    .from('investigations')
+    .select('*')
+    .eq('id', id)
+    .single();
+  if (error || !investigation) return null;
+
+  const [categoryResult, comparisonsResult, assertionsResult, evidenceResult, sourcesResult,
+    questionsResult, responsesResult, findingsResult, updatesResult, tagLinksResult,
+    assignmentsResult, auditResult, revisionsResult] = await Promise.all([
+    investigation.category_id
+      ? supabase.from('investigation_categories').select('id, name, slug, description').eq('id', investigation.category_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase.from('investigation_comparisons').select('*').eq('investigation_id', id).order('sort_order'),
+    supabase.from('investigation_assertions').select('*').eq('investigation_id', id).order('sort_order'),
+    supabase.from('investigation_evidence').select('*').eq('investigation_id', id).order('sort_order'),
+    supabase.from('investigation_sources').select('*').eq('investigation_id', id).order('sort_order'),
+    supabase.from('investigation_questions').select('*').eq('investigation_id', id).order('sort_order'),
+    supabase.from('investigation_responses').select('*').eq('investigation_id', id).order('created_at'),
+    supabase.from('investigation_findings').select('*').eq('investigation_id', id).order('created_at'),
+    supabase.from('investigation_updates').select('*').eq('investigation_id', id).order('occurred_at', { ascending: false }),
+    supabase.from('investigation_tag_links').select('tag_id').eq('investigation_id', id),
+    includeAdmin ? supabase.from('investigation_assignments').select('*').eq('investigation_id', id) : Promise.resolve({ data: [] }),
+    includeAdmin ? supabase.from('investigation_audit_logs').select('*').eq('investigation_id', id).order('created_at', { ascending: false }).limit(100) : Promise.resolve({ data: [] }),
+    includeAdmin ? supabase.from('investigation_revisions').select('id, revision_number, change_summary, created_by, created_at').eq('investigation_id', id).order('revision_number', { ascending: false }).limit(100) : Promise.resolve({ data: [] })
+  ]);
+
+  const tagIds = (tagLinksResult.data || []).map((row) => row.tag_id);
+  let tags = [];
+  if (tagIds.length) {
+    const { data } = await supabase.from('investigation_tags').select('*').in('id', tagIds).order('name');
+    tags = data || [];
   }
 
-  function addMeta(container, label, value) {
-    if (!value) return;
-    const wrapper = document.createElement('div');
-    const dt = document.createElement('dt');
-    const dd = document.createElement('dd');
-    dt.textContent = label;
-    dd.textContent = value;
-    wrapper.append(dt, dd);
-    container.append(wrapper);
+  const evidence = evidenceResult.data || [];
+  if (includeSignedUrls) {
+    await Promise.all(evidence.map(async (item) => {
+      item.admin_original_url = await signedUrl(supabase, item.storage_path, 900);
+      item.admin_preview_url = await signedUrl(supabase, item.public_preview_path, 900);
+    }));
   }
 
-  function renderComparisonTable(rows) {
-    const container = document.querySelector('#comparison-results');
-    container.replaceChildren();
-    if (!rows.length) {
-      container.innerHTML = '<p class="case-empty-note">No structured comparison table has been published for this case.</p>';
-      return;
-    }
-    const groups = new Map();
-    rows.forEach((row) => {
-      const key = row.comparison_group || 'Comparison';
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key).push(row);
-    });
-    for (const [group, items] of groups) {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'comparison-group';
-      const heading = document.createElement('h3');
-      heading.textContent = group;
-      const tableWrap = document.createElement('div');
-      tableWrap.className = 'responsive-table-wrap';
-      const table = document.createElement('table');
-      table.className = 'comparison-table';
-      table.innerHTML = '<thead><tr><th scope="col">Phrase, statement, person, group, or action tested</th><th scope="col">Result</th><th scope="col">Date</th><th scope="col">Exhibit</th><th scope="col">Notes</th></tr></thead>';
-      const tbody = document.createElement('tbody');
-      items.forEach((row) => {
-        const tr = document.createElement('tr');
-        const cells = [row.tested_item, row.result, row.tested_at ? formatDate(row.tested_at) : 'Not recorded', row.evidence_label || '—', row.notes || '—'];
-        const labels = ['Item tested', 'Result', 'Date', 'Exhibit', 'Notes'];
-        cells.forEach((value, index) => {
-          const td = document.createElement('td');
-          td.dataset.label = labels[index];
-          td.textContent = value;
-          tr.append(td);
-        });
-        tbody.append(tr);
-      });
-      table.append(tbody);
-      tableWrap.append(table);
-      wrapper.append(heading, tableWrap);
-      container.append(wrapper);
-    }
-  }
+  return {
+    investigation,
+    category: categoryResult.data || null,
+    comparisons: comparisonsResult.data || [],
+    assertions: assertionsResult.data || [],
+    evidence,
+    sources: sourcesResult.data || [],
+    questions: questionsResult.data || [],
+    responses: responsesResult.data || [],
+    findings: findingsResult.data || [],
+    updates: updatesResult.data || [],
+    tags,
+    assignments: assignmentsResult.data || [],
+    audit: auditResult.data || [],
+    revisions: revisionsResult.data || []
+  };
+}
 
-  function evidenceMedia(item) {
-    if (item.visibility !== 'Public') {
-      const withheld = document.createElement('div');
-      withheld.className = 'withheld-evidence';
-      withheld.innerHTML = `<strong>${escapeHtml(item.visibility)}</strong><p>${escapeHtml(item.withheld_reason || 'This exhibit is described publicly but the underlying file is not displayed.')}</p>`;
-      return withheld;
-    }
-    if (!item.media_url && item.source_url) {
-      const link = document.createElement('a');
-      link.className = 'evidence-external-link';
-      link.href = item.source_url;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.textContent = 'Open original source ↗';
-      return link;
-    }
-    if (!item.media_url) {
-      const missing = document.createElement('p');
-      missing.className = 'case-empty-note';
-      missing.textContent = 'No public media file is attached to this exhibit.';
-      return missing;
-    }
-    if (item.media_kind === 'image') {
-      const img = document.createElement('img');
-      img.src = item.media_url;
-      img.alt = item.alt_text || `${item.exhibit_label}: ${item.title}`;
-      img.loading = 'lazy';
-      return img;
-    }
-    if (item.media_kind === 'video') {
-      const video = document.createElement('video');
-      video.src = item.media_url;
-      video.controls = true;
-      video.preload = 'metadata';
-      if (item.transcript) video.setAttribute('aria-describedby', `transcript-${item.id}`);
-      return video;
-    }
-    if (item.media_kind === 'audio') {
-      const audio = document.createElement('audio');
-      audio.src = item.media_url;
-      audio.controls = true;
-      audio.preload = 'metadata';
-      return audio;
-    }
-    if (item.media_kind === 'pdf') {
-      const iframe = document.createElement('iframe');
-      iframe.src = item.media_url;
-      iframe.title = `${item.exhibit_label}: ${item.title} PDF preview`;
-      iframe.loading = 'lazy';
-      return iframe;
-    }
-    const link = document.createElement('a');
-    link.className = 'evidence-file-card';
-    link.href = item.original_url || item.media_url;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    link.textContent = item.allow_download ? 'Open or download document ↗' : 'Open document preview ↗';
-    return link;
-  }
+export async function createRevision(supabase, investigationId, actorUserId, changeSummary) {
+  const bundle = await fetchInvestigationBundle(supabase, investigationId, { includeAdmin: false, includeSignedUrls: false });
+  if (!bundle) return;
+  const { data: latest } = await supabase
+    .from('investigation_revisions')
+    .select('revision_number')
+    .eq('investigation_id', investigationId)
+    .order('revision_number', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const revisionNumber = (latest?.revision_number || 0) + 1;
+  const { error } = await supabase.from('investigation_revisions').insert({
+    investigation_id: investigationId,
+    revision_number: revisionNumber,
+    snapshot: bundle,
+    change_summary: cleanText(changeSummary, 500) || null,
+    created_by: actorUserId
+  });
+  if (error) throw error;
+}
 
-  function renderEvidence(items) {
-    const container = document.querySelector('#evidence-exhibits');
-    container.replaceChildren();
-    if (!items.length) {
-      container.innerHTML = '<p class="case-empty-note">No public or withheld evidence exhibits are listed.</p>';
-      return;
-    }
-    items.forEach((item) => {
-      const card = document.createElement('article');
-      card.className = 'evidence-card';
-      const header = document.createElement('header');
-      header.innerHTML = `<span class="exhibit-label">${escapeHtml(item.exhibit_label)}</span><h3>${escapeHtml(item.title)}</h3>`;
-      const media = document.createElement('div');
-      media.className = `evidence-media evidence-${item.media_kind}`;
-      media.append(evidenceMedia(item));
-      const body = document.createElement('div');
-      body.className = 'evidence-body';
-      const metadata = [
-        item.evidence_type && ['Type', item.evidence_type],
-        item.captured_at && ['Captured', formatDate(item.captured_at)],
-        item.source_name && ['Source', item.source_name]
-      ].filter(Boolean);
-      body.innerHTML = `${item.description ? `<p>${escapeHtml(item.description)}</p>` : ''}${metadata.length ? `<dl>${metadata.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`).join('')}</dl>` : ''}${item.authenticity_note ? `<p class="authenticity-note"><strong>Authenticity/editing note:</strong> ${escapeHtml(item.authenticity_note)}</p>` : ''}`;
-      if (item.transcript) {
-        const details = document.createElement('details');
-        details.id = `transcript-${item.id}`;
-        details.className = 'transcript-panel';
-        details.innerHTML = `<summary>Transcript or captions</summary><p>${escapeHtml(item.transcript).replaceAll('\n', '<br>')}</p>`;
-        body.append(details);
-      }
-      const links = document.createElement('div');
-      links.className = 'evidence-links';
-      if (item.source_url) links.innerHTML += `<a href="${escapeHtml(item.source_url)}" target="_blank" rel="noopener noreferrer">Original source ↗</a>`;
-      if (item.allow_download && item.original_url) links.innerHTML += `<a href="${escapeHtml(item.original_url)}" target="_blank" rel="noopener noreferrer">Download exhibit ↗</a>`;
-      body.append(links);
-      card.append(header, media, body);
-      container.append(card);
-    });
+export function validateAdminFile(file) {
+  const original = sanitizeFilename(cleanText(file?.name, 180, { required: true, label: 'File name' }));
+  const contentType = cleanText(file?.type, 120, { required: true, label: 'File type' }).toLowerCase();
+  const sizeBytes = Number(file?.size);
+  const extension = original.includes('.') ? original.split('.').pop().toLowerCase() : '';
+  if (!ADMIN_FILE_TYPES.has(contentType) || !ADMIN_FILE_EXTENSIONS.has(extension)) {
+    throw new ValidationError('The evidence file type is not supported.');
   }
-
-  function renderList(selector, rows, emptyMessage) {
-    const list = document.querySelector(selector);
-    list.replaceChildren();
-    if (!rows.length) {
-      const li = document.createElement('li');
-      li.className = 'case-empty-note';
-      li.textContent = emptyMessage;
-      list.append(li);
-      return;
-    }
-    rows.forEach((row) => {
-      const li = document.createElement('li');
-      li.textContent = row.statement || row.question;
-      list.append(li);
-    });
+  if (!Number.isFinite(sizeBytes) || sizeBytes <= 0 || sizeBytes > ADMIN_MAX_FILE_SIZE) {
+    throw new ValidationError('Evidence files must be larger than 0 bytes and no larger than 50 MB.');
   }
+  return { originalName: original, contentType, sizeBytes: Math.trunc(sizeBytes), extension };
+}
 
-  function renderResponse(bundle) {
-    const record = document.querySelector('#response-record');
-    const questions = document.querySelector('#response-questions');
-    record.replaceChildren();
-    questions.replaceChildren();
-    const response = bundle.responses[0];
-    const status = bundle.investigation.response_status || response?.response_status || 'Not Yet Contacted';
-    const dl = document.createElement('dl');
-    dl.className = 'response-meta';
-    addMeta(dl, 'Response status', status);
-    addMeta(dl, 'Contacted', response?.contacted ? 'Yes' : 'No');
-    if (response?.contacted_at) addMeta(dl, 'Date contacted', formatDate(response.contacted_at));
-    if (response?.contact_method) addMeta(dl, 'Method', response.contact_method);
-    if (response?.response_deadline) addMeta(dl, 'Response deadline', formatDate(response.response_deadline, true));
-    if (response?.response_received_at) addMeta(dl, 'Response received', formatDate(response.response_received_at, true));
-    record.append(dl);
-    if (response?.response_html) {
-      const heading = document.createElement('h3');
-      heading.textContent = 'Response';
-      const content = document.createElement('div');
-      content.className = 'rich-content response-content';
-      content.innerHTML = response.response_html;
-      record.append(heading, content);
-    }
-    if (response?.response_document_url) {
-      const link = document.createElement('a');
-      link.className = 'text-link';
-      link.href = response.response_document_url;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.textContent = 'Open response document ↗';
-      record.append(link);
-    }
-    if (response?.editorial_note_html) {
-      const note = document.createElement('div');
-      note.className = 'editorial-note';
-      note.innerHTML = `<strong>Editorial note:</strong>${response.editorial_note_html}`;
-      record.append(note);
-    }
-    const responseQuestions = bundle.questions.filter((item) => item.question_type === 'right_of_response');
-    if (responseQuestions.length) {
-      questions.innerHTML = '<h3>Questions submitted or prepared</h3>';
-      const list = document.createElement('ol');
-      list.className = 'question-list';
-      responseQuestions.forEach((item) => { const li = document.createElement('li'); li.textContent = item.question; list.append(li); });
-      questions.append(list);
-    }
+export function makeEvidencePaths(caseNumber, evidenceId, file) {
+  const token = crypto.randomUUID();
+  const originalPath = `investigations/${caseNumber}/${evidenceId}/original-${token}-${file.originalName}`;
+  const previewPath = file.contentType.startsWith('image/')
+    ? `investigations/${caseNumber}/${evidenceId}/preview-${token}.webp`
+    : null;
+  return { originalPath, previewPath };
+}
+
+export function currentFinding(bundle) {
+  return (bundle?.findings || []).find((item) => item.is_current) || null;
+}
+
+export function findingChanged(oldFinding, nextFinding) {
+  if (!oldFinding && !nextFinding) return false;
+  if (!oldFinding || !nextFinding) return true;
+  return ['finding_type', 'custom_label', 'headline', 'explanation_html', 'stage']
+    .some((field) => String(oldFinding[field] || '') !== String(nextFinding[field] || ''));
+}
+
+export function validatePublishable(bundle) {
+  const inv = bundle.investigation;
+  const missing = [];
+  if (!inv.title?.trim()) missing.push('title');
+  if (!inv.short_summary?.trim()) missing.push('short summary');
+  if (!inv.case_summary_html?.trim()) missing.push('case summary');
+  if (!inv.claim_html?.trim()) missing.push('claim being examined');
+  if (!inv.standard_html?.trim()) missing.push('standard being applied');
+  if (!inv.methodology_html?.trim()) missing.push('methodology');
+  if (!(bundle.assertions || []).some((item) => item.assertion_type === 'limitation')) missing.push('what the evidence does not establish');
+  if (!currentFinding(bundle)) missing.push('current finding');
+  if (!(bundle.evidence || []).some((item) => item.visibility === 'Public' && (item.storage_path || item.source_url))) missing.push('at least one public evidence exhibit or source link');
+  if (!(bundle.sources || []).length) missing.push('at least one structured source');
+  if (missing.length) throw new ValidationError(`Before publishing, complete: ${missing.join(', ')}.`);
+}
+
+export async function uniqueSlug(supabase, desired, excludeId = null) {
+  const base = slugify(desired);
+  let candidate = base;
+  let suffix = 2;
+  while (true) {
+    let query = supabase.from('investigations').select('id').eq('slug', candidate).limit(1);
+    if (excludeId) query = query.neq('id', excludeId);
+    const { data, error } = await query;
+    if (error) throw error;
+    if (!data?.length) return candidate;
+    candidate = `${base}-${suffix}`;
+    suffix += 1;
   }
+}
 
-  function renderFinding(bundle) {
-    const container = document.querySelector('#current-finding');
-    const finding = bundle.findings.find((item) => item.is_current) || bundle.findings.at(-1);
-    if (!finding) {
-      container.innerHTML = '<h2>No finding issued</h2><p>This investigation has not reached a preliminary or final finding.</p>';
-      return;
-    }
-    const label = finding.finding_type === 'Custom' ? finding.custom_label : finding.finding_type;
-    container.innerHTML = `<div class="finding-heading-row"><span class="finding-stage">${escapeHtml(finding.stage)} Finding</span><span class="finding-badge">${escapeHtml(label)}</span></div><h2>${escapeHtml(finding.headline)}</h2><div class="rich-content">${finding.explanation_html}</div><dl class="finding-meta">${finding.issued_at ? `<div><dt>Date issued</dt><dd>${escapeHtml(formatDate(finding.issued_at))}</dd></div>` : ''}${finding.approving_editor_name ? `<div><dt>Approving editor</dt><dd>${escapeHtml(finding.approving_editor_name)}</dd></div>` : ''}</dl>`;
-  }
+export function publicEvidenceType(item) {
+  if (item.content_type?.startsWith('image/')) return 'image';
+  if (item.content_type?.startsWith('video/')) return 'video';
+  if (item.content_type?.startsWith('audio/')) return 'audio';
+  if (item.content_type === 'application/pdf') return 'pdf';
+  if (item.content_type) return 'document';
+  if (item.source_url) return 'webpage';
+  return 'other';
+}
 
-  function renderSources(sources) {
-    const list = document.querySelector('#source-list');
-    list.replaceChildren();
-    if (!sources.length) {
-      list.innerHTML = '<li class="case-empty-note">No structured public sources are listed.</li>';
-      return;
+export async function toPublicBundle(supabase, bundle) {
+  const inv = bundle.investigation;
+  const evidence = [];
+  for (const item of bundle.evidence || []) {
+    const withheld = item.visibility.startsWith('Withheld');
+    if (item.visibility !== 'Public' && !withheld) continue;
+    let mediaUrl = null;
+    let originalUrl = null;
+    if (item.visibility === 'Public') {
+      mediaUrl = await signedUrl(supabase, item.public_preview_path || item.storage_path, 3600);
+      if (item.allow_download) originalUrl = await signedUrl(supabase, item.storage_path, 3600);
     }
-    sources.forEach((source) => {
-      const li = document.createElement('li');
-      li.className = 'source-item';
-      const title = document.createElement('a');
-      title.href = source.url;
-      title.target = '_blank';
-      title.rel = 'noopener noreferrer';
-      title.textContent = source.title;
-      const details = [source.publisher, source.source_type, source.publication_date ? `Published ${formatDate(source.publication_date)}` : null, source.accessed_date ? `Accessed ${formatDate(source.accessed_date)}` : null].filter(Boolean);
-      li.append(title);
-      if (details.length) { const meta = document.createElement('p'); meta.className = 'source-meta'; meta.textContent = details.join(' • '); li.append(meta); }
-      if (source.description) { const description = document.createElement('p'); description.textContent = source.description; li.append(description); }
-      if (source.archived_url) { const archive = document.createElement('a'); archive.className = 'archived-source'; archive.href = source.archived_url; archive.target = '_blank'; archive.rel = 'noopener noreferrer'; archive.textContent = 'Archived copy ↗'; li.append(archive); }
-      list.append(li);
+    evidence.push({
+      id: item.id,
+      exhibit_label: item.exhibit_label,
+      title: item.title,
+      description: item.description,
+      evidence_type: item.evidence_type,
+      captured_at: item.captured_at,
+      source_name: item.source_name,
+      source_url: item.source_url,
+      visibility: item.visibility,
+      withheld_reason: item.withheld_reason,
+      allow_download: item.allow_download,
+      authenticity_note: item.authenticity_note,
+      alt_text: item.alt_text,
+      transcript: item.transcript,
+      featured: item.featured,
+      media_kind: publicEvidenceType(item),
+      media_url: mediaUrl,
+      original_url: originalUrl
     });
   }
-
-  function renderUpdates(updates) {
-    const timeline = document.querySelector('#update-timeline');
-    timeline.replaceChildren();
-    if (!updates.length) {
-      timeline.innerHTML = '<p class="case-empty-note">No public corrections or updates have been recorded.</p>';
-      return;
-    }
-    updates.forEach((update) => {
-      const item = document.createElement('article');
-      item.className = `update-item ${update.update_type === 'Correction' || update.finding_changed ? 'material-update' : ''}`;
-      item.innerHTML = `<div class="update-marker" aria-hidden="true"></div><div><div class="update-header"><span class="update-type">${escapeHtml(update.update_type)}</span><time datetime="${escapeHtml(update.occurred_at)}">${escapeHtml(formatDate(update.occurred_at, true))}</time></div><p>${escapeHtml(update.description)}</p>${update.previous_wording || update.new_wording ? `<details><summary>View wording change</summary>${update.previous_wording ? `<p><strong>Previous:</strong> ${escapeHtml(update.previous_wording)}</p>` : ''}${update.new_wording ? `<p><strong>New:</strong> ${escapeHtml(update.new_wording)}</p>` : ''}</details>` : ''}</div>`;
-      timeline.append(item);
-    });
-  }
-
-  function updateDocumentMetadata(bundle) {
-    const inv = bundle.investigation;
-    const title = inv.seo_title || `${inv.title} | ${inv.case_number}`;
-    const description = inv.seo_description || inv.short_summary || 'Evidence, methodology, response, findings, sources, and corrections.';
-    const canonical = `https://www.theunshakenmajority.com/investigations/${inv.slug}`;
-    document.title = `${title} | The Unshaken Majority`;
-    document.querySelector('meta[name="description"]').content = description;
-    document.querySelector('#canonical-url').href = canonical;
-    document.querySelector('#og-title').content = title;
-    document.querySelector('#og-description').content = description;
-    document.querySelector('#og-url').content = canonical;
-    document.querySelector('#twitter-title').content = title;
-    document.querySelector('#twitter-description').content = description;
-    if (bundle.featured_image_url) {
-      document.querySelector('#og-image').content = bundle.featured_image_url;
-      document.querySelector('#twitter-image').content = bundle.featured_image_url;
-    }
-    const jsonLd = document.querySelector('#investigation-jsonld') || document.createElement('script');
-    jsonLd.type = 'application/ld+json';
-    jsonLd.id = 'investigation-jsonld';
-    jsonLd.textContent = JSON.stringify({
-      '@context': 'https://schema.org',
-      '@type': 'Report',
-      headline: inv.title,
-      alternativeHeadline: inv.subtitle || undefined,
-      description,
-      datePublished: inv.published_at || undefined,
-      dateModified: inv.updated_at,
-      url: canonical,
-      publisher: { '@type': 'Organization', name: 'The Unshaken Majority', url: 'https://www.theunshakenmajority.com' },
-      about: inv.subject || undefined,
-      identifier: inv.case_number,
-      image: bundle.featured_image_url || 'https://www.theunshakenmajority.com/assets/social-preview.jpg'
-    });
-    if (!jsonLd.isConnected) document.head.append(jsonLd);
-  }
-
-  async function initializeDetail() {
-    const pathParts = location.pathname.split('/').filter(Boolean);
-    const slug = pathParts.at(-1) === 'investigations' ? new URLSearchParams(location.search).get('slug') : pathParts.at(-1);
-    const loading = document.querySelector('#investigation-loading');
-    const errorPanel = document.querySelector('#investigation-error');
-    const content = document.querySelector('#investigation-content');
-    try {
-      const bundle = await fetchJson(`/api/investigation?slug=${encodeURIComponent(slug || '')}`);
-      const inv = bundle.investigation;
-      updateDocumentMetadata(bundle);
-      setText('[data-case-number]', inv.case_number);
-      const statusElement = document.querySelector('[data-status]');
-      setText('[data-status]', inv.status, { hideEmpty: true });
-      if (inv.status) statusElement.classList.add(statusClass(inv.status));
-      const findingLabel = inv.finding_classification === 'Custom' ? inv.custom_finding_label : inv.finding_classification;
-      setText('[data-finding]', findingLabel || 'No finding issued');
-      setText('[data-title]', inv.title);
-      setText('[data-subtitle]', inv.subtitle, { hideEmpty: true });
-      setText('[data-subject]', inv.subject || 'Not specified');
-      document.querySelector('[data-case-summary]').innerHTML = inv.case_summary_html || '<p>No case summary has been published.</p>';
-      document.querySelector('[data-claim]').innerHTML = inv.claim_html || '<p>The exact claim has not been published.</p>';
-      document.querySelector('[data-standard]').innerHTML = inv.standard_html || '<p>The applicable standard has not been published.</p>';
-      document.querySelector('[data-methodology]').innerHTML = inv.methodology_html || '<p>The methodology has not been published.</p>';
-      document.querySelector('[data-bottom-line]').innerHTML = inv.bottom_line_html || '<p>No closing statement has been published.</p>';
-
-      const meta = document.querySelector('#case-meta');
-      addMeta(meta, 'Case number', inv.case_number);
-      if (inv.status) addMeta(meta, 'Status', inv.status);
-      addMeta(meta, 'Finding', findingLabel || 'No finding issued');
-      addMeta(meta, 'Finding stage', inv.finding_stage);
-      addMeta(meta, 'Date opened', formatDate(inv.date_opened));
-      if (inv.published_at) addMeta(meta, 'Date published', formatDate(inv.published_at));
-      addMeta(meta, 'Last updated', formatDate(inv.updated_at, true));
-      addMeta(meta, 'Evidence type', inv.evidence_type);
-      addMeta(meta, 'Response status', inv.response_status);
-      addMeta(meta, 'Topic', bundle.category?.name);
-
-      renderComparisonTable(bundle.comparisons || []);
-      renderEvidence(bundle.evidence || []);
-      renderList('[data-supported-list]', (bundle.assertions || []).filter((item) => item.assertion_type === 'supported'), 'No supported-finding statements are published.');
-      renderList('[data-limitations-list]', (bundle.assertions || []).filter((item) => item.assertion_type === 'limitation'), 'No limitations have been published.');
-      renderResponse(bundle);
-      renderFinding(bundle);
-      renderList('[data-remaining-questions]', (bundle.questions || []).filter((item) => item.question_type === 'remaining'), 'No unresolved questions are listed.');
-      renderSources(bundle.sources || []);
-      renderUpdates(bundle.updates || []);
-
-      const submitUrl = new URL('/submit', location.origin);
-      submitUrl.searchParams.set('case', inv.case_number);
-      submitUrl.searchParams.set('title', inv.title);
-      document.querySelector('#submit-evidence-button').href = submitUrl.pathname + submitUrl.search;
-      const correctionUrl = new URL('/correction', location.origin);
-      correctionUrl.searchParams.set('case', inv.case_number);
-      document.querySelector('#report-error-button').href = correctionUrl.pathname + correctionUrl.search;
-      document.querySelector('#share-investigation').addEventListener('click', async () => {
-        const shareData = { title: `${inv.case_number}: ${inv.title}`, text: inv.short_summary || inv.title, url: location.href };
-        try {
-          if (navigator.share) await navigator.share(shareData);
-          else { await navigator.clipboard.writeText(location.href); document.querySelector('#share-investigation').textContent = 'Link Copied'; }
-        } catch (error) {
-          if (error.name !== 'AbortError') window.prompt('Copy this investigation link:', location.href);
-        }
-      });
-      loading.hidden = true;
-      content.hidden = false;
-    } catch (error) {
-      loading.hidden = true;
-      errorPanel.hidden = false;
-      errorPanel.querySelector('[data-error-message]').textContent = error.message;
-    }
-  }
-
-  if (page === 'archive') initializeArchive();
-  if (page === 'detail') initializeDetail();
-})();
+  const featured = evidence.find((item) => item.featured && item.media_url) || evidence.find((item) => item.media_kind === 'image' && item.media_url) || null;
+  return {
+    investigation: { ...inv, status: inv.public_status_visible ? inv.status : null },
+    category: bundle.category,
+    comparisons: bundle.comparisons,
+    assertions: bundle.assertions,
+    evidence,
+    sources: bundle.sources,
+    questions: bundle.questions,
+    responses: (bundle.responses || []).filter((item) => item.public_visible),
+    findings: bundle.findings,
+    updates: (bundle.updates || []).filter((item) => item.public_visible),
+    tags: bundle.tags,
+    featured_image_url: featured?.media_url || null
+  };
+}

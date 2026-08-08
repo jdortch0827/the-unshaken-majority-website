@@ -1,27 +1,43 @@
-(() => {
-  const section = document.querySelector('#latest-investigation-section');
-  const card = document.querySelector('#latest-investigation-card');
-  if (!section || !card) return;
-  const escapeHtml = (value) => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
-  const dateLabel = (value) => value ? new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(value)) : 'Not provided';
-  fetch('/api/latest-investigation', { headers: { Accept: 'application/json' }, cache: 'no-store' })
-    .then((response) => response.json().then((data) => ({ response, data })))
-    .then(({ response, data }) => {
-      if (!response.ok || !data.ok || !data.item) return;
-      const item = data.item;
-      card.innerHTML = `
-        ${item.featured_image?.url ? `<img class="latest-case-image" src="${escapeHtml(item.featured_image.url)}" alt="${escapeHtml(item.featured_image.alt || item.title)}">` : ''}
-        <div class="latest-case-content">
-          <div class="latest-case-kicker"><span class="case-number">${escapeHtml(item.case_number)}</span>${item.status ? `<span class="status-badge">${escapeHtml(item.status)}</span>` : ''}</div>
-          <h3>${escapeHtml(item.title)}</h3>
-          <p>${escapeHtml(item.short_summary || 'Open the complete case file for evidence, methodology, responses, findings, sources, and corrections.')}</p>
-          <dl class="latest-case-meta">
-            <div><dt>Finding</dt><dd>${escapeHtml(item.finding_label || 'No finding issued')}</dd></div>
-            <div><dt>Published or updated</dt><dd>${escapeHtml(dateLabel(item.updated_at || item.published_at))}</dd></div>
-          </dl>
-        </div>
-        <a class="btn btn-primary" href="/investigations/${encodeURIComponent(item.slug)}">View Investigation</a>`;
-      section.hidden = false;
-    })
-    .catch(() => { section.hidden = true; });
-})();
+import { getSupabaseAdmin, sendJson } from '../server/shared.js';
+import { PUBLIC_WORKFLOWS } from '../server/investigations.js';
+
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', 'GET');
+    return sendJson(res, 405, { ok: false, error: 'Method not allowed.' });
+  }
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from('investigations')
+      .select('case_number, slug, title, short_summary, status, finding_classification, custom_finding_label, finding_stage, published_at, updated_at, workflow_status, public_visible, public_status_visible, featured_evidence_id')
+      .eq('public_visible', true)
+      .order('published_at', { ascending: false, nullsFirst: false })
+      .order('updated_at', { ascending: false })
+      .limit(10);
+    if (error) throw error;
+    const item = (data || []).find((row) => PUBLIC_WORKFLOWS.has(row.workflow_status)) || null;
+    let featuredImage = null;
+    if (item?.featured_evidence_id) {
+      const { data: evidence } = await supabase.from('investigation_evidence').select('storage_path, public_preview_path, visibility, alt_text').eq('id', item.featured_evidence_id).eq('visibility', 'Public').maybeSingle();
+      const path = evidence?.public_preview_path || evidence?.storage_path;
+      if (path) {
+        const { data: signed } = await supabase.storage.from('investigation-evidence').createSignedUrl(path, 3600);
+        if (signed?.signedUrl) featuredImage = { url: signed.signedUrl, alt: evidence.alt_text || item.title };
+      }
+    }
+    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
+    return sendJson(res, 200, {
+      ok: true,
+      item: item ? {
+        ...item,
+        status: item.public_status_visible ? item.status : null,
+        featured_image: featuredImage,
+        finding_label: item.finding_classification === 'Custom' ? item.custom_finding_label : item.finding_classification
+      } : null
+    });
+  } catch (error) {
+    console.error(error);
+    return sendJson(res, 500, { ok: false, error: 'The latest investigation could not be loaded.' });
+  }
+}
