@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = '20260808-public-publish-state-image-v2';
+  const VERSION = '20260808-investigation-card-disappearance-v3';
   const FALLBACK_IMAGE = '/social-preview.jpg';
 
   const INTERNAL_PUBLIC_LABELS = new Map([
@@ -17,7 +17,10 @@
     String(value || '').replace(/\s+/g, ' ').trim().toLowerCase();
 
   const looksLikePublicBadge = element => {
-    if (!element || ['OPTION', 'SELECT', 'INPUT', 'TEXTAREA'].includes(element.tagName)) {
+    if (
+      !element ||
+      ['OPTION', 'SELECT', 'INPUT', 'TEXTAREA'].includes(element.tagName)
+    ) {
       return false;
     }
 
@@ -34,17 +37,15 @@
   const normalizePublicBadge = element => {
     if (!looksLikePublicBadge(element)) return;
 
-    const current = normalize(element.textContent);
-    const replacement = INTERNAL_PUBLIC_LABELS.get(current);
+    const replacement = INTERNAL_PUBLIC_LABELS.get(
+      normalize(element.textContent)
+    );
 
     if (!replacement) return;
 
     element.textContent = replacement;
     element.dataset.umPublicStageNormalized = VERSION;
-    element.setAttribute(
-      'aria-label',
-      replacement
-    );
+    element.setAttribute('aria-label', replacement);
   };
 
   const isBrandImage = image => {
@@ -78,22 +79,34 @@
     );
   };
 
-  const hideFailedImage = image => {
+  const restoreAnyV2HiddenContainers = () => {
+    document
+      .querySelectorAll('.um-investigation-image-container-hidden')
+      .forEach(element => {
+        element.classList.remove(
+          'um-investigation-image-container-hidden'
+        );
+      });
+  };
+
+  const hideOnlyFailedImage = image => {
+    if (!image) return;
+
     image.classList.add('um-investigation-image-hidden');
     image.removeAttribute('src');
+    image.removeAttribute('srcset');
     image.setAttribute('aria-hidden', 'true');
 
-    const container = image.parentElement;
-    if (container) {
-      container.classList.add('um-investigation-image-container-hidden');
-    }
+    // CRITICAL V3 RULE:
+    // Never hide image.parentElement. In some card layouts the parent is
+    // the entire investigation link/card.
   };
 
   const applyFallback = image => {
     if (!isInvestigationImage(image)) return;
 
     if (image.dataset.umFallbackAttempted === 'true') {
-      hideFailedImage(image);
+      hideOnlyFailedImage(image);
       return;
     }
 
@@ -113,22 +126,34 @@
       () => applyFallback(image)
     );
 
-    if (
-      image.complete &&
-      image.naturalWidth === 0
-    ) {
-      applyFallback(image);
-    }
+    // Wait one animation frame before judging a newly inserted image.
+    // This avoids treating an image that has not started loading as failed.
+    requestAnimationFrame(() => {
+      if (
+        image.isConnected &&
+        image.complete &&
+        image.naturalWidth === 0 &&
+        image.getAttribute('src')
+      ) {
+        applyFallback(image);
+      }
+    });
   };
 
   const scan = root => {
-    const scope = root instanceof Element || root instanceof Document
-      ? root
-      : document;
+    restoreAnyV2HiddenContainers();
+
+    const scope =
+      root instanceof Element || root instanceof Document
+        ? root
+        : document;
 
     if (scope instanceof Element) {
       normalizePublicBadge(scope);
-      if (scope.tagName === 'IMG') protectImage(scope);
+
+      if (scope.tagName === 'IMG') {
+        protectImage(scope);
+      }
     }
 
     scope.querySelectorAll?.(
@@ -143,6 +168,7 @@
 
   const style = document.createElement('style');
   style.dataset.umPublicInvestigationSafety = VERSION;
+
   style.textContent = `
     .um-investigation-image-fallback {
       display: block;
@@ -153,9 +179,14 @@
       background: #07182b;
     }
 
-    .um-investigation-image-hidden,
-    .um-investigation-image-container-hidden {
+    .um-investigation-image-hidden {
       display: none !important;
+    }
+
+    /* V3 explicitly reverses the V2 rule that could hide a whole card. */
+    .um-investigation-image-container-hidden {
+      display: revert !important;
+      visibility: visible !important;
     }
   `;
 
@@ -172,14 +203,19 @@
   );
 
   const observer = new MutationObserver(records => {
+    restoreAnyV2HiddenContainers();
+
     for (const record of records) {
       for (const node of record.addedNodes) {
-        if (node instanceof Element) scan(node);
+        if (node instanceof Element) {
+          scan(node);
+        }
       }
     }
   });
 
   const start = () => {
+    restoreAnyV2HiddenContainers();
     scan(document);
 
     observer.observe(document.body, {
@@ -189,10 +225,15 @@
 
     window.setTimeout(() => scan(document), 500);
     window.setTimeout(() => scan(document), 1500);
+    window.setTimeout(() => scan(document), 4000);
   };
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', start, { once: true });
+    document.addEventListener(
+      'DOMContentLoaded',
+      start,
+      { once: true }
+    );
   } else {
     start();
   }
