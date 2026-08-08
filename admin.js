@@ -202,13 +202,17 @@
   }
 
   function field(label, name, value = '', opts = {}) {
+    // Database-null optional values must render as blank controls. Converting null
+    // directly with String(null) produced the literal text "null", which then made
+    // optional URL fields fail server-side validation when a draft was saved.
+    const safeValue = value == null ? '' : String(value);
     let control;
     if (opts.type === 'textarea') {
-      control = `<textarea data-field="${escapeHtml(name)}">${escapeHtml(value)}</textarea>`;
+      control = `<textarea data-field="${escapeHtml(name)}">${escapeHtml(safeValue)}</textarea>`;
     } else if (opts.type === 'select') {
-      control = `<select data-field="${escapeHtml(name)}">${(opts.options || []).map(v => `<option value="${escapeHtml(v)}" ${v === value ? 'selected' : ''}>${escapeHtml(v)}</option>`).join('')}</select>`;
+      control = `<select data-field="${escapeHtml(name)}">${(opts.options || []).map(v => `<option value="${escapeHtml(v)}" ${String(v) === safeValue ? 'selected' : ''}>${escapeHtml(v)}</option>`).join('')}</select>`;
     } else {
-      control = `<input data-field="${escapeHtml(name)}" type="${escapeHtml(opts.type || 'text')}" value="${escapeHtml(value)}" ${opts.placeholder ? `placeholder="${escapeHtml(opts.placeholder)}"` : ''}>`;
+      control = `<input data-field="${escapeHtml(name)}" type="${escapeHtml(opts.type || 'text')}" value="${escapeHtml(safeValue)}" ${opts.placeholder ? `placeholder="${escapeHtml(opts.placeholder)}"` : ''}>`;
     }
     return `<div class="field ${escapeHtml(opts.className || '')}"><label>${escapeHtml(label)}</label>${control}</div>`;
   }
