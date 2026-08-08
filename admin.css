@@ -4,3 +4,45 @@
 @media(max-width:1100px){.admin-filter-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.repeater-row .field{grid-column:span 6}}
 @media(max-width:760px){.admin-header{align-items:flex-start}.admin-user{flex-direction:column;align-items:flex-end;gap:2px}.admin-main{width:min(100% - 20px,1440px);padding-top:20px}.admin-page-heading,.admin-panel-heading,.editor-sticky-bar{align-items:stretch;flex-direction:column}.editor-sticky-bar{top:73px}.editor-save-actions{justify-content:flex-start!important}.admin-form-grid,.admin-filter-grid{grid-template-columns:1fr}.admin-filter-actions{grid-column:1}.admin-panel{padding:16px}.admin-table-wrap{overflow:visible;border:0}.admin-table{min-width:0}.admin-table thead{display:none}.admin-table,.admin-table tbody,.admin-table tr,.admin-table td{display:block;width:100%}.admin-table tr{border:1px solid var(--admin-border);border-radius:12px;margin-bottom:14px;padding:10px;background:#fff}.admin-table td{display:grid;grid-template-columns:110px 1fr;gap:8px;border:0;padding:7px}.admin-table td:before{content:attr(data-label);font-weight:900;color:var(--admin-navy)}.correction-review-controls{grid-template-columns:1fr}.editor-section>summary{padding:16px}.editor-section-body{padding:15px}.repeater-row{grid-template-columns:1fr;padding-top:40px}.repeater-row .field,.repeater-row .field.half,.repeater-row .field.full{grid-column:1}.admin-evidence-list{grid-template-columns:1fr}.admin-preview-toolbar{font-size:.82rem}}
 .repeater-row.is-locked-history{background:#f2f5f8;border-color:#bdc9d5}.repeater-row.is-locked-history input,.repeater-row.is-locked-history select,.repeater-row.is-locked-history textarea{color:#425368;background:#e9eef3;cursor:not-allowed}.locked-history-note{grid-column:1/-1;margin:2px 0 0;color:#526579;font-size:.82rem;font-weight:800}
+
+/* Protected draft preview layout correction.
+   The public case layout normally reserves a 240px first column for the case
+   contents navigation. The protected preview intentionally omits that
+   navigation, so it must render as one full-width document column. */
+.admin-preview-frame .case-layout {
+  display: block;
+  width: 100%;
+  padding: clamp(34px, 5vw, 64px) clamp(24px, 5vw, 64px) clamp(58px, 7vw, 90px);
+}
+.admin-preview-frame .case-document {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+.admin-preview-frame .case-section,
+.admin-preview-frame .rich-content,
+.admin-preview-frame .finding-list,
+.admin-preview-frame .limitation-list,
+.admin-preview-frame .responsive-table-wrap {
+  width: 100%;
+  max-width: none;
+}
+.admin-preview-frame .case-section h2,
+.admin-preview-frame .finding-panel h2 {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+.admin-preview-frame .finding-panel {
+  overflow: hidden;
+}
+@media (max-width: 760px) {
+  .admin-preview-frame {
+    width: 100%;
+    margin: 0;
+    box-shadow: none;
+  }
+  .admin-preview-frame .case-layout {
+    padding: 30px 18px 56px;
+  }
+}
